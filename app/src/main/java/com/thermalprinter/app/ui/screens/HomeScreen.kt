@@ -38,6 +38,8 @@ fun HomeScreen(
     settings: StoreSettings,
     recentReceipts: List<TransactionReceipt>,
     printerStatus: PrinterConnectionStatus,
+    subscriptionState: com.thermalprinter.app.subscription.SubscriptionManager.SubscriptionState,
+    onOpenSubscriptionDialog: () -> Unit,
     onImageSelected: (Uri) -> Unit,
     onManualInputText: (String) -> Unit,
     onSelectReceipt: (TransactionReceipt) -> Unit,
@@ -204,7 +206,8 @@ fun HomeScreen(
 
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = Color.White.copy(alpha = 0.2f)
+                                color = Color.White.copy(alpha = 0.2f),
+                                onClick = onOpenSubscriptionDialog
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -212,15 +215,15 @@ fun HomeScreen(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.FlashOn,
+                                        imageVector = if (subscriptionState.isPro) Icons.Default.Verified else Icons.Default.WorkspacePremium,
                                         contentDescription = null,
                                         tint = Color.White,
                                         modifier = Modifier.size(14.dp)
                                     )
                                     Text(
-                                        text = "Fast Mode",
+                                        text = if (subscriptionState.isPro) "PRO: ${subscriptionState.plan}" else "Gratis (${subscriptionState.remaining}/7)",
                                         color = Color.White,
-                                        fontSize = 10.sp,
+                                        fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -277,7 +280,45 @@ fun HomeScreen(
             }
         }
 
-        // Promotional / Feature Banner Carousel (Modern 2026 UI Banner)
+        // Daily Quota Indicator Card (Free tier warning/pro badge)
+        if (!subscriptionState.isPro) {
+            item {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = OrangeContainer,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onOpenSubscriptionDialog
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(Icons.Default.HourglassBottom, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(24.dp))
+                            Column {
+                                Text(
+                                    text = "Sisa Kuota Cetak Gratis: ${subscriptionState.remaining}/7 Hari Ini",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "Direset tiap 00:00. Upgrade ke Pro (Rp 15rb/bln) via DANA",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+                        }
+                        Icon(Icons.Default.ChevronRight, null, tint = PrimaryOrange)
+                    }
+                }
+            }
+        }
         item {
             Row(
                 modifier = Modifier

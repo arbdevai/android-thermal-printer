@@ -38,10 +38,13 @@ import com.thermalprinter.app.ui.theme.*
 fun SettingsScreen(
     settings: StoreSettings,
     printerStatus: PrinterConnectionStatus,
+    subscriptionState: com.thermalprinter.app.subscription.SubscriptionManager.SubscriptionState,
+    deviceId: String,
     pairedDevices: List<BluetoothDevice>,
     onSaveSettings: (StoreSettings) -> Unit,
     onPickLogo: (Uri) -> Unit,
     onRemoveLogo: () -> Unit,
+    onOpenSubscriptionDialog: () -> Unit,
     onConnectPrinter: (String) -> Unit,
     onDisconnectPrinter: () -> Unit,
     onTestPrint: () -> Unit,
@@ -717,7 +720,7 @@ fun SettingsScreen(
                                 color = TextPrimary
                             )
                             Text(
-                                text = "Versi 1.2.0 (Build 3) • Signature v1+v2+v3",
+                                text = "Versi 1.3.0 (Build 4) • Signature v1+v2+v3",
                                 fontSize = 11.sp,
                                 color = TextSecondary
                             )
@@ -745,11 +748,23 @@ fun SettingsScreen(
                     }
 
                     OutlinedButton(
-                        onClick = { showChangelogDialog = true },
+                        onClick = onOpenSubscriptionDialog,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange)
+                    ) {
+                        Icon(Icons.Default.WorkspacePremium, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(if (subscriptionState.isPro) "Kelola Langganan (${subscriptionState.plan})" else "Upgrade ARBCN Pro (Rp 15rb/bln)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+
+                    OutlinedButton(
+                        onClick = { showChangelogDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
                     ) {
                         Icon(Icons.Default.NewReleases, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))

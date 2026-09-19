@@ -12,8 +12,8 @@ android {
         applicationId = "com.thermalprinter.app"
         minSdk = 24
         targetSdk = 34
-        versionCode = 3
-        versionName = "1.2.0"
+        versionCode = 4
+        versionName = "1.3.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -101,8 +101,11 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    // ML Kit Text Recognition (Offline / Play Services)
-    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.0")
+    // ML Kit Text Recognition (Bundled model, consistent offline OCR)
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
+    // ExifInterface for accurate orientation from Share Intent images
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
 
     // Room Database
     val roomVersion = "2.6.1"

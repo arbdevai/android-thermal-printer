@@ -28,7 +28,9 @@ import com.thermalprinter.app.domain.model.TransactionReceipt
 import com.thermalprinter.app.domain.parser.ReceiptParserEngine
 import com.thermalprinter.app.ocr.OcrManager
 import com.thermalprinter.app.printer.ReceiptFormatter
+import com.thermalprinter.app.subscription.SubscriptionManager
 import com.thermalprinter.app.ui.components.FloatingNavBar
+import com.thermalprinter.app.ui.components.SubscriptionDialog
 import com.thermalprinter.app.ui.navigation.NavRoute
 import com.thermalprinter.app.ui.screens.HistoryScreen
 import com.thermalprinter.app.ui.screens.HomeScreen
@@ -43,6 +45,7 @@ class MainActivity : ComponentActivity() {
     private val appData by lazy { ThermalPrinterApp.instance.appData }
     private val printerManager by lazy { ThermalPrinterApp.instance.printerManager }
     private val ocrManager by lazy { OcrManager(this) }
+    private val subscriptionManager by lazy { ThermalPrinterApp.instance.subscriptionManager }
 
     private val currentReceiptState = mutableStateOf(TransactionReceipt())
     private val isOcrProcessing = mutableStateOf(false)
@@ -69,6 +72,11 @@ class MainActivity : ComponentActivity() {
                 val settings by appData.settings.collectAsStateWithLifecycle(initialValue = StoreSettings())
                 val receipts by appData.receipts.collectAsStateWithLifecycle(initialValue = emptyList())
                 val printerStatus by printerManager.connectionStatus.collectAsStateWithLifecycle()
+                val subscriptionState by subscriptionManager.subscriptionState.collectAsStateWithLifecycle(
+                    initialValue = SubscriptionManager.SubscriptionState()
+                )
+
+                var showSubscriptionDialog by remember { mutableStateOf(false) }
                 val snackbarHostState = remember { SnackbarHostState() }
                 val scope = rememberCoroutineScope()
 
@@ -108,6 +116,8 @@ class MainActivity : ComponentActivity() {
                                     settings = settings,
                                     recentReceipts = receipts,
                                     printerStatus = printerStatus,
+                                    subscriptionState = subscriptionState,
+                                    onOpenSubscriptionDialog = { showSubscriptionDialog = true },
                                     onImageSelected = { uri ->
                                         processImageUri(uri) {
                                             navController.navigate(NavRoute.Preview.route)
@@ -150,6 +160,15 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onPrintReceipt = { toPrint ->
                                         scope.launch {
+                                            // Enforce daily quota or Pro license check
+                                            if (!subscriptionManager.canGenerateReceipt()) {
+                                                showSubscriptionDialog = true
+                                                snackbarHostState.showSnackbar(
+                                                    "Kuota cetak gratis hari ini habis (7/7). Direset besok atau upgrade ke Pro via DANA."
+                                                )
+                                                return@launch
+                                            }
+
                                             val logoBitmap = if (settings.showLogo && settings.logoPath.isNotBlank()) {
                                                 appData.loadLogoBitmap(settings.logoPath)
                                             } else null
@@ -157,6 +176,7 @@ class MainActivity : ComponentActivity() {
                                             val bytes = ReceiptFormatter.buildEscPos(toPrint, settings, logoBitmap)
                                             val printResult = printerManager.printBytes(bytes)
                                             if (printResult.isSuccess) {
+                                                subscriptionManager.consumeReceipt()
                                                 appData.save(toPrint.copy(isReprint = true, printCount = toPrint.printCount + 1))
                                                 snackbarHostState.showSnackbar("Nota berhasil dicetak!")
                                             } else {
@@ -231,6 +251,8 @@ class MainActivity : ComponentActivity() {
                                 SettingsScreen(
                                     settings = settings,
                                     printerStatus = printerStatus,
+                                    subscriptionState = subscriptionState,
+                                    deviceId = subscriptionManager.deviceId,
                                     pairedDevices = paired,
                                     onSaveSettings = { updatedSettings ->
                                         scope.launch {
@@ -254,6 +276,7 @@ class MainActivity : ComponentActivity() {
                                             snackbarHostState.showSnackbar("Logo toko dihapus")
                                         }
                                     },
+                                    onOpenSubscriptionDialog = { showSubscriptionDialog = true },
                                     onConnectPrinter = { address ->
                                         scope.launch {
                                             val res = printerManager.connect(address)
@@ -303,6 +326,37 @@ class MainActivity : ComponentActivity() {
                                     CircularProgressIndicator(color = PrimaryOrange)
                                 }
                             }
+                        }
+
+                        // Subscription & Activation Dialog
+                        if (showSubscriptionDialog) {
+                            SubscriptionDialog(
+                                subscriptionState = subscriptionState,
+                                deviceId = subscriptionManager.deviceId,
+                                onActivateLicense = { key ->
+                                    scope.launch {
+                                        val result = subscriptionManager.activateLicense(key)
+                                        if (result.isSuccess) {
+                                            showSubscriptionDialog = false
+                                            snackbarHostState.showSnackbar(result.getOrNull() ?: "Lisensi aktif!")
+                                        } else {
+                                            snackbarHostState.showSnackbar(result.exceptionOrNull()?.message ?: "Aktivasi gagal")
+                                        }
+                                    }
+                                },
+                                onApplyPromo = { promo ->
+                                    scope.launch {
+                                        val result = subscriptionManager.applyPromoCode(promo)
+                                        if (result.isSuccess) {
+                                            showSubscriptionDialog = false
+                                            snackbarHostState.showSnackbar(result.getOrNull() ?: "Promo berhasil!")
+                                        } else {
+                                            snackbarHostState.showSnackbar(result.exceptionOrNull()?.message ?: "Promo gagal")
+                                        }
+                                    }
+                                },
+                                onDismiss = { showSubscriptionDialog = false }
+                            )
                         }
                     }
                 }

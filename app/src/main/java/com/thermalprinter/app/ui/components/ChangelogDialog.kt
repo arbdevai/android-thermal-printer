@@ -29,9 +29,22 @@ data class ReleaseLog(
 
 val APP_CHANGELOG = listOf(
     ReleaseLog(
-        version = "v1.2.0",
+        version = "v1.3.0",
         date = "September 2026",
         isLatest = true,
+        changes = listOf(
+            "Upgrade ke Google ML Kit Bundled + Image Preprocessor (Auto-Rotate EXIF, Auto-Upscale, dan Contrast Boost untuk screenshot Share Intent)",
+            "Sistem Kuota Harian Gratis (7 cetak nota per hari) yang otomatis reset setiap pukul 00:00",
+            "Proteksi Anti-Cheat Offline ketat: pencegahan rollback jam perangkat dan penguncian lisensi berbasis hardware",
+            "Sistem Langganan Pro ARBCN (Paket Bulanan Rp 15rb unlimited, Tahunan, dan Lifetime) via DANA Admin",
+            "Dukungan Aktivasi Kode Lisensi HMAC-SHA256 unik per perangkat dan penukaran Kode Promo / Voucher",
+            "Script generator lisensi admin mandiri (tools/generate_license.py)"
+        )
+    ),
+    ReleaseLog(
+        version = "v1.2.0",
+        date = "September 2026",
+        isLatest = false,
         changes = listOf(
             "Arsitektur Dedicated Strategy Parser untuk 8 Bank & E-Wallet (BCA, BRImo, Livin, DANA, GoPay, OVO, ShopeePay, SeaBank)",
             "Ekstraksi data super presisi: Metode transfer (BI-FAST/Online/Sesama), Berita/Catatan, dan No. Referensi lengkap",

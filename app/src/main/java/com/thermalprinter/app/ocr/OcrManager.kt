@@ -13,11 +13,20 @@ class OcrManager(private val context: Context) {
 
     suspend fun recognizeText(imageUri: Uri): Result<String> {
         return try {
-            val image = InputImage.fromFilePath(context, imageUri)
+            // Apply preprocessing (EXIF rotation + auto-upscale + contrast enhance)
+            val enhancedBitmap = ImagePreprocessor.loadAndEnhance(context, imageUri)
+            val image = InputImage.fromBitmap(enhancedBitmap, 0)
             val visionText = recognizer.process(image).await()
             Result.success(visionText.text)
         } catch (e: Exception) {
-            Result.failure(e)
+            // Fallback directly to original URI if preprocessing fails
+            try {
+                val fallbackImage = InputImage.fromFilePath(context, imageUri)
+                val fallbackText = recognizer.process(fallbackImage).await()
+                Result.success(fallbackText.text)
+            } catch (fallbackEx: Exception) {
+                Result.failure(fallbackEx)
+            }
         }
     }
 
