@@ -52,6 +52,7 @@ class SubscriptionManager(private val context: Context) {
 
     data class SubscriptionState(
         val isPro: Boolean = false,
+        val isPlus: Boolean = false, // Has access to Custom Invoice (PLUS3M, YEARLY, LIFETIME)
         val plan: String = "FREE",
         val expiry: Long = 0L,
         val usedToday: Int = 0,
@@ -68,6 +69,7 @@ class SubscriptionManager(private val context: Context) {
         val plan = prefs[KEY_LICENSE_PLAN] ?: "FREE"
         val licenseKey = prefs[KEY_LICENSE_KEY] ?: ""
         val isPro = !isClockTampered && licenseKey.isNotBlank() && (expiry == Long.MAX_VALUE || expiry > now)
+        val isPlus = isPro && (plan == "PLUS3M" || plan == "YEARLY" || plan == "LIFETIME")
 
         val today = todayDate(now)
         val lastReset = prefs[KEY_LAST_RESET_DATE] ?: ""
@@ -75,6 +77,7 @@ class SubscriptionManager(private val context: Context) {
 
         SubscriptionState(
             isPro = isPro,
+            isPlus = isPlus,
             plan = if (isPro) plan else "FREE",
             expiry = expiry,
             usedToday = usedToday,

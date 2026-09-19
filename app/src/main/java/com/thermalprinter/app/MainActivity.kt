@@ -118,6 +118,7 @@ class MainActivity : ComponentActivity() {
                                     printerStatus = printerStatus,
                                     subscriptionState = subscriptionState,
                                     onOpenSubscriptionDialog = { showSubscriptionDialog = true },
+                                    onNavigateToCustomInvoice = { navController.navigate(NavRoute.CustomInvoice.route) },
                                     onImageSelected = { uri ->
                                         processImageUri(uri) {
                                             navController.navigate(NavRoute.Preview.route)
@@ -198,6 +199,29 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToSettings = {
                                         navController.navigate(NavRoute.Settings.route)
                                     }
+                                )
+                            }
+
+                            composable(NavRoute.CustomInvoice.route) {
+                                com.thermalprinter.app.ui.screens.CustomInvoiceScreen(
+                                    settings = settings,
+                                    subscriptionState = subscriptionState,
+                                    onPrintInvoice = { invoice ->
+                                        scope.launch {
+                                            val logoBitmap = if (settings.showLogo && settings.logoPath.isNotBlank()) {
+                                                appData.loadLogoBitmap(settings.logoPath)
+                                            } else null
+
+                                            val bytes = com.thermalprinter.app.printer.InvoiceFormatter.buildEscPos(invoice, settings, logoBitmap)
+                                            val printResult = printerManager.printBytes(bytes)
+                                            if (printResult.isSuccess) {
+                                                snackbarHostState.showSnackbar("Nota Invoice berhasil dicetak!")
+                                            } else {
+                                                snackbarHostState.showSnackbar("Gagal mencetak: ${printResult.exceptionOrNull()?.message}")
+                                            }
+                                        }
+                                    },
+                                    onOpenSubscriptionDialog = { showSubscriptionDialog = true }
                                 )
                             }
 

@@ -436,47 +436,92 @@ fun PreviewScreen(
         }
     }
 
-    // Custom Admin Fee Input Dialog
+    // Custom Admin Fee Input Dialog (Modern 2026 Custom Dialog)
     if (showCustomFeeDialog) {
-        AlertDialog(
-            onDismissRequest = { showCustomFeeDialog = false },
-            containerColor = LightSurface,
-            title = {
-                Text(text = "Nominal Admin Toko Khusus", color = TextPrimary, fontWeight = FontWeight.Bold)
-            },
-            text = {
-                OutlinedTextField(
-                    value = customFeeText,
-                    onValueChange = { customFeeText = it.filter(Char::isDigit) },
-                    label = { Text("Biaya Admin Toko (Rp)") },
-                    placeholder = { Text("Contoh: 1500, 3500, 7000") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = modernTextFieldColors(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val fee = customFeeText.toLongOrNull() ?: 0L
-                        editableReceipt = editableReceipt.copy(storeAdminFee = fee)
-                        onUpdateReceipt(editableReceipt)
-                        showCustomFeeDialog = false
-                        customFeeText = ""
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                    shape = RoundedCornerShape(10.dp)
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showCustomFeeDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = LightSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text("Terapkan", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCustomFeeDialog = false }) {
-                    Text("Batal", color = TextSecondary)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(20.dp))
+                        }
+                        Column {
+                            Text(
+                                text = "Admin Toko Khusus",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Tentukan biaya admin untuk nota ini",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = customFeeText,
+                        onValueChange = { customFeeText = it.filter(Char::isDigit) },
+                        label = { Text("Biaya Admin Toko (Rp)") },
+                        placeholder = { Text("Contoh: 1500, 3500, 7000") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showCustomFeeDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
+                        ) {
+                            Text("Batal", fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                val fee = customFeeText.toLongOrNull() ?: 0L
+                                editableReceipt = editableReceipt.copy(storeAdminFee = fee)
+                                onUpdateReceipt(editableReceipt)
+                                showCustomFeeDialog = false
+                                customFeeText = ""
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                        ) {
+                            Text("Terapkan", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 }
 

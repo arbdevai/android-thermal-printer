@@ -176,9 +176,10 @@ fun SubscriptionDialog(
                         ) {
                             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Text("Pilihan Paket Langganan:", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = PrimaryOrangeDark)
-                                PlanRow("1 Bulan (Unlimited)", "Rp 15.000", "Bebas cetak sepuasnya tanpa batas harian")
-                                PlanRow("1 Tahun (Hemat)", "Rp 99.000", "Untuk kasir konter/toko aktif")
-                                PlanRow("Lifetime / Permanen", "Rp 149.000", "Sekali bayar selamanya")
+                                PlanRow("1 Bulan (Standard Pro)", "Rp 15.000", "Bebas cetak struk bank sepuasnya")
+                                PlanRow("3 Bulan (PLUS Custom Nota) ★", "Rp 25.000", "Semua fitur Pro + Bebas buat Nota Toko/Bengkel/Jasa")
+                                PlanRow("1 Tahun (Hemat)", "Rp 99.000", "Semua fitur Pro + Custom Nota 1 tahun")
+                                PlanRow("Lifetime / Permanen", "Rp 149.000", "Akses penuh semua fitur selamanya")
                             }
                         }
 

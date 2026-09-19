@@ -720,7 +720,7 @@ fun SettingsScreen(
                                 color = TextPrimary
                             )
                             Text(
-                                text = "Versi 1.3.0 (Build 4) • Signature v1+v2+v3",
+                                text = "Versi 1.4.0 (Build 5) • Signature v1+v2+v3",
                                 fontSize = 11.sp,
                                 color = TextSecondary
                             )

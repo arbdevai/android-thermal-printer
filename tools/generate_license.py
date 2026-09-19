@@ -47,8 +47,8 @@ def main():
     # License subparser
     lic_parser = subparsers.add_parser("license", help="Generate customer license key")
     lic_parser.add_argument("--device", "-d", required=True, help="16-character Device ID copied from customer app")
-    lic_parser.add_argument("--plan", "-p", choices=["WEEKLY", "MONTHLY", "YEARLY", "LIFETIME"], default="MONTHLY", help="Subscription Plan")
-    lic_parser.add_argument("--days", type=int, default=30, help="Custom duration in days (default 30)")
+    lic_parser.add_argument("--plan", "-p", choices=["WEEKLY", "MONTHLY", "PLUS3M", "YEARLY", "LIFETIME"], default="PLUS3M", help="Subscription Plan")
+    lic_parser.add_argument("--days", type=int, default=90, help="Custom duration in days")
 
     # Promo subparser
     promo_parser = subparsers.add_parser("promo", help="Generate promotional voucher code")
@@ -58,7 +58,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "license":
-        days = 7 if args.plan == "WEEKLY" else (365 if args.plan == "YEARLY" else args.days)
+        days = 7 if args.plan == "WEEKLY" else (90 if args.plan == "PLUS3M" else (365 if args.plan == "YEARLY" else args.days))
         key = generate_license(args.plan, args.device, days=days)
         print("\n" + "="*50)
         print(f"🔑 LISENSI ARBCN PRO BERHASIL DIGENERATE")

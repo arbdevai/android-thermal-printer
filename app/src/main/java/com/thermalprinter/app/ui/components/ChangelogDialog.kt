@@ -29,9 +29,21 @@ data class ReleaseLog(
 
 val APP_CHANGELOG = listOf(
     ReleaseLog(
-        version = "v1.3.0",
+        version = "v1.4.0",
         date = "September 2026",
         isLatest = true,
+        changes = listOf(
+            "Fitur Baru: Pembuat Nota Invoice Toko, Bengkel, dan Jasa Servis 58mm (Daftar item dinamis, kalkulasi diskon & kembalian)",
+            "Paket PLUS 3 Bulan (Rp 25.000): Akses penuh cetak struk transfer bank + pembuat nota invoice toko & bengkel",
+            "Redesain Seluruh Dialog & Alert menjadi Modern Custom Dialogs 2026 (Orange Light style, rounded cards, tombol modern)",
+            "Pembaruan APK Admin Generator: Dukungan instant generate paket PLUS 3 Bulan (PLUS3M) dengan tombol Share WA",
+            "Konsistensi tanda tangan digital APK v1+v2+v3"
+        )
+    ),
+    ReleaseLog(
+        version = "v1.3.0",
+        date = "September 2026",
+        isLatest = false,
         changes = listOf(
             "Upgrade ke Google ML Kit Bundled + Image Preprocessor (Auto-Rotate EXIF, Auto-Upscale, dan Contrast Boost untuk screenshot Share Intent)",
             "Sistem Kuota Harian Gratis (7 cetak nota per hari) yang otomatis reset setiap pukul 00:00",

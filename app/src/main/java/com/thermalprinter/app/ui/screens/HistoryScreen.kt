@@ -226,67 +226,39 @@ fun HistoryScreen(
         }
     }
 
-    // Confirmation Dialog for Clear All
+    // Confirmation Dialog for Clear All (Modern 2026 Custom Dialog)
     if (showClearConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showClearConfirmDialog = false },
-            containerColor = LightSurface,
-            title = { Text("Hapus Semua Riwayat?", color = TextPrimary, fontWeight = FontWeight.Bold) },
-            text = {
-                Text(
-                    "Semua catatan riwayat transaksi yang tersimpan di HP akan dihapus secara permanen.",
-                    color = TextSecondary
-                )
+        com.thermalprinter.app.ui.components.ModernConfirmDialog(
+            title = "Hapus Semua Riwayat?",
+            message = "Semua catatan riwayat transaksi yang tersimpan di HP akan dihapus secara permanen.",
+            confirmText = "Hapus Semua",
+            confirmColor = ErrorRed,
+            icon = Icons.Default.DeleteSweep,
+            iconColor = ErrorRed,
+            iconBgColor = ErrorContainer,
+            onConfirm = {
+                onClearAllReceipts()
+                showClearConfirmDialog = false
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onClearAllReceipts()
-                        showClearConfirmDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Ya, Hapus Semua", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearConfirmDialog = false }) {
-                    Text("Batal", color = TextSecondary)
-                }
-            }
+            onDismiss = { showClearConfirmDialog = false }
         )
     }
 
-    // Confirmation Dialog for Single Delete
+    // Confirmation Dialog for Single Delete (Modern 2026 Custom Dialog)
     receiptToDelete?.let { receipt ->
-        AlertDialog(
-            onDismissRequest = { receiptToDelete = null },
-            containerColor = LightSurface,
-            title = { Text("Hapus Nota Ini?", color = TextPrimary, fontWeight = FontWeight.Bold) },
-            text = {
-                Text(
-                    "Hapus transaksi ${receipt.source.displayName} sebesar ${ReceiptFormatter.formatRupiah(receipt.calculateTotal())}?",
-                    color = TextSecondary
-                )
+        com.thermalprinter.app.ui.components.ModernConfirmDialog(
+            title = "Hapus Nota Transaksi?",
+            message = "Hapus transaksi ${receipt.source.displayName} sebesar ${ReceiptFormatter.formatRupiah(receipt.calculateTotal())}?",
+            confirmText = "Hapus Nota",
+            confirmColor = ErrorRed,
+            icon = Icons.Default.Delete,
+            iconColor = ErrorRed,
+            iconBgColor = ErrorContainer,
+            onConfirm = {
+                onDeleteReceipt(receipt.id)
+                receiptToDelete = null
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onDeleteReceipt(receipt.id)
-                        receiptToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Text("Hapus", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { receiptToDelete = null }) {
-                    Text("Batal", color = TextSecondary)
-                }
-            }
+            onDismiss = { receiptToDelete = null }
         )
     }
 }

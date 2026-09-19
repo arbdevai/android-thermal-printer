@@ -40,6 +40,7 @@ fun HomeScreen(
     printerStatus: PrinterConnectionStatus,
     subscriptionState: com.thermalprinter.app.subscription.SubscriptionManager.SubscriptionState,
     onOpenSubscriptionDialog: () -> Unit,
+    onNavigateToCustomInvoice: () -> Unit,
     onImageSelected: (Uri) -> Unit,
     onManualInputText: (String) -> Unit,
     onSelectReceipt: (TransactionReceipt) -> Unit,
@@ -353,10 +354,10 @@ fun HomeScreen(
             }
         }
 
-        // Quick Action Buttons
+        // Action Grid Rows
         item {
             Text(
-                text = "Aksi Cepat",
+                text = "Fitur & Aksi Cepat",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -376,13 +377,13 @@ fun HomeScreen(
                     onClick = { imagePickerLauncher.launch("image/*") }
                 )
                 ActionPillCard(
-                    title = "Input Teks",
-                    subtitle = "Tempel / Manual",
-                    icon = Icons.Default.EditNote,
-                    iconBg = InfoContainer,
-                    iconColor = InfoBlue,
+                    title = "Nota Bengkel / Toko",
+                    subtitle = "Invoice Jasa (PLUS)",
+                    icon = Icons.Default.PostAdd,
+                    iconBg = SuccessContainer,
+                    iconColor = SuccessGreen,
                     modifier = Modifier.weight(1f),
-                    onClick = { showManualInputDialog = true }
+                    onClick = onNavigateToCustomInvoice
                 )
             }
         }
@@ -394,20 +395,20 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 ActionPillCard(
-                    title = "Uji Cetak",
-                    subtitle = "Tes Printer 58mm",
-                    icon = Icons.Default.Print,
-                    iconBg = WarningContainer,
-                    iconColor = WarningAmber,
+                    title = "Input Teks",
+                    subtitle = "Tempel / Manual",
+                    icon = Icons.Default.EditNote,
+                    iconBg = InfoContainer,
+                    iconColor = InfoBlue,
                     modifier = Modifier.weight(1f),
-                    onClick = onQuickTestPrint
+                    onClick = { showManualInputDialog = true }
                 )
                 ActionPillCard(
                     title = "Pengaturan",
                     subtitle = "Logo, Toko & Admin",
                     icon = Icons.Default.Settings,
-                    iconBg = SuccessContainer,
-                    iconColor = SuccessGreen,
+                    iconBg = WarningContainer,
+                    iconColor = WarningAmber,
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToSettings
                 )
@@ -553,60 +554,105 @@ fun HomeScreen(
         }
     }
 
-    // Manual Input Dialog
+    // Manual Input Dialog (Modern 2026 Custom Dialog)
     if (showManualInputDialog) {
-        AlertDialog(
-            onDismissRequest = { showManualInputDialog = false },
-            containerColor = LightSurface,
-            title = {
-                Text(text = "Input / Tempel Teks Transaksi", color = TextPrimary, fontWeight = FontWeight.Bold)
-            },
-            text = {
-                OutlinedTextField(
-                    value = manualText,
-                    onValueChange = { manualText = it },
-                    placeholder = {
-                        Text(
-                            text = "Contoh: Transfer Berhasil\nNominal: Rp 50.000\nKe: Budi Santoso\nRef: 20260919123456",
-                            color = TextMuted,
-                            fontSize = 12.sp
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(180.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = PrimaryOrange,
-                        unfocusedBorderColor = BorderLight,
-                        focusedContainerColor = LightSurface,
-                        unfocusedContainerColor = LightSurface
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (manualText.isNotBlank()) {
-                            onManualInputText(manualText)
-                            showManualInputDialog = false
-                            manualText = ""
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                    shape = RoundedCornerShape(10.dp)
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showManualInputDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(24.dp),
+                color = LightSurface,
+                border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text("Proses Nota", color = TextOnOrange, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showManualInputDialog = false }) {
-                    Text("Batal", color = TextSecondary)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.EditNote, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(20.dp))
+                        }
+                        Column {
+                            Text(
+                                text = "Input Teks Transaksi",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Tempel pesan SMS banking / bukti transfer",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = manualText,
+                        onValueChange = { manualText = it },
+                        placeholder = {
+                            Text(
+                                text = "Contoh:\nTransfer Berhasil\nNominal: Rp 50.000\nKe: Budi Santoso\nRef: 20260919123456",
+                                color = TextMuted,
+                                fontSize = 12.sp
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedBorderColor = PrimaryOrange,
+                            unfocusedBorderColor = BorderLight,
+                            focusedContainerColor = LightSurfaceSecondary,
+                            unfocusedContainerColor = LightSurfaceSecondary
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showManualInputDialog = false },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
+                        ) {
+                            Text("Batal", fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = {
+                                if (manualText.isNotBlank()) {
+                                    onManualInputText(manualText)
+                                    showManualInputDialog = false
+                                    manualText = ""
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
+                        ) {
+                            Text("Proses Nota", color = TextOnOrange, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 }
 

@@ -202,6 +202,7 @@ fun AdminAppScreen() {
                         val plans = listOf(
                             "WEEKLY" to "1 Minggu",
                             "MONTHLY" to "1 Bulan (15k)",
+                            "PLUS3M" to "PLUS 3 Bulan (25k) ★",
                             "YEARLY" to "1 Tahun (99k)",
                             "LIFETIME" to "Lifetime (149k)"
                         )
@@ -234,6 +235,7 @@ fun AdminAppScreen() {
                                 if (deviceIdInput.isNotBlank()) {
                                     val days = when (selectedPlan) {
                                         "WEEKLY" -> 7
+                                        "PLUS3M" -> 90
                                         "YEARLY" -> 365
                                         else -> 30
                                     }

@@ -46,6 +46,7 @@ fun FloatingNavBar(
     val items = listOf(
         NavItem(NavRoute.Home.route, "Beranda", Icons.Default.Home),
         NavItem(NavRoute.Preview.route, "Cetak", Icons.Default.Receipt),
+        NavItem(NavRoute.CustomInvoice.route, "Nota Toko", Icons.Default.PostAdd),
         NavItem(NavRoute.History.route, "Riwayat", Icons.Default.History),
         NavItem(NavRoute.Settings.route, "Atur", Icons.Default.Settings)
     )
