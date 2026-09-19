@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AndroidThermalPrinter"
 include(":app")
+include(":admin-generator")

@@ -44,19 +44,34 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease --stacktrace || echo "Release build completed or skipped"
 
-      - name: Upload Debug APK Artifact
+      - name: Upload ARBCN User App Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: arbcn-v1.3.0-signed-debug-apk
+          name: arbcn-v1.3.0-user-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
 
-      - name: Upload Release APK Artifact
+      - name: Upload ARBCN User App Release APK
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: arbcn-v1.3.0-signed-release-apk
+          name: arbcn-v1.3.0-user-release-apk
           path: app/build/outputs/apk/release/*.apk
+          retention-days: 14
+
+      - name: Upload ARBCN Admin Generator Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: arbcn-admin-generator-debug-apk
+          path: admin-generator/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Upload ARBCN Admin Generator Release APK
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: arbcn-admin-generator-release-apk
+          path: admin-generator/build/outputs/apk/release/*.apk
           retention-days: 14
 
       - name: Create GitHub Release
