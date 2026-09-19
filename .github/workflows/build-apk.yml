@@ -47,7 +47,7 @@ jobs:
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: arbcn-v1.1.0-signed-debug-apk
+          name: arbcn-v1.2.0-signed-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 14
 
@@ -55,7 +55,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: arbcn-v1.1.0-signed-release-apk
+          name: arbcn-v1.2.0-signed-release-apk
           path: app/build/outputs/apk/release/*.apk
           retention-days: 14
 

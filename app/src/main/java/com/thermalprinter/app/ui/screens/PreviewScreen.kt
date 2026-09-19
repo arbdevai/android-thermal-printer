@@ -41,6 +41,8 @@ fun PreviewScreen(
 ) {
     var editableReceipt by remember(receipt) { mutableStateOf(receipt) }
     var activeTab by remember { mutableIntStateOf(0) } // 0: Preview, 1: Form Edit
+    var showCustomFeeDialog by remember { mutableStateOf(false) }
+    var customFeeText by remember { mutableStateOf("") }
 
     val scrollState = rememberScrollState()
 
@@ -78,11 +80,23 @@ fun PreviewScreen(
                     val summaryText = buildString {
                         appendLine("=== ${settings.storeName} ===")
                         appendLine("Layanan: ${editableReceipt.source.displayName}")
-                        appendLine("Nominal: ${ReceiptFormatter.formatRupiah(editableReceipt.transferAmount)}")
-                        if (editableReceipt.storeAdminFee > 0) {
-                            appendLine("Biaya Admin: ${ReceiptFormatter.formatRupiah(editableReceipt.storeAdminFee)}")
+                        if (editableReceipt.transferMethod.isNotBlank()) {
+                            appendLine("Metode: ${editableReceipt.transferMethod}")
                         }
-                        appendLine("Total: ${ReceiptFormatter.formatRupiah(editableReceipt.calculateTotal())}")
+                        appendLine("Nominal: ${ReceiptFormatter.formatRupiah(editableReceipt.transferAmount)}")
+                        if (editableReceipt.splitAdminFee) {
+                            if (editableReceipt.originalAdminFee > 0) {
+                                appendLine("Admin Bank: ${ReceiptFormatter.formatRupiah(editableReceipt.originalAdminFee)}")
+                            }
+                            if (editableReceipt.storeAdminFee > 0) {
+                                appendLine("Admin Toko: ${ReceiptFormatter.formatRupiah(editableReceipt.storeAdminFee)}")
+                            }
+                        } else {
+                            if (editableReceipt.totalAdminFee() > 0) {
+                                appendLine("Total Admin: ${ReceiptFormatter.formatRupiah(editableReceipt.totalAdminFee())}")
+                            }
+                        }
+                        appendLine("Total Bayar: ${ReceiptFormatter.formatRupiah(editableReceipt.calculateTotal())}")
                         if (editableReceipt.receiverName.isNotBlank()) {
                             appendLine("Penerima: ${editableReceipt.receiverName}")
                         }
@@ -90,6 +104,9 @@ fun PreviewScreen(
                             appendLine("No. Ref: ${editableReceipt.referenceNumber}")
                         }
                         appendLine("Waktu: ${editableReceipt.transactionDate} ${editableReceipt.transactionTime}")
+                        if (editableReceipt.notes.isNotBlank()) {
+                            appendLine("Catatan: ${editableReceipt.notes}")
+                        }
                     }
                     onShareText(summaryText)
                 }
@@ -193,32 +210,81 @@ fun PreviewScreen(
 
                     Divider(color = BorderSubtle)
 
-                    // Template Selector
+                    // Template & Fee Display Option Row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Format Template",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextSecondary
-                        )
+                        Column {
+                            Text(
+                                text = "Format Template",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextSecondary
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
+                                ReceiptTemplate.entries.forEach { tpl ->
+                                    val isSelected = editableReceipt.template == tpl
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = {
+                                            editableReceipt = editableReceipt.copy(template = tpl)
+                                            onUpdateReceipt(editableReceipt)
+                                        },
+                                        label = { Text(if (tpl == ReceiptTemplate.COMPACT) "Ringkas" else "Detail", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = OrangeContainer,
+                                            selectedLabelColor = PrimaryOrangeDark,
+                                            containerColor = LightSurfaceSecondary,
+                                            labelColor = TextSecondary
+                                        ),
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                }
+                            }
+                        }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            ReceiptTemplate.entries.forEach { tpl ->
-                                val isSelected = editableReceipt.template == tpl
+                        // Fee Display Mode: Dipisah vs Digabung
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Opsi Biaya Admin",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextSecondary
+                            )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(top = 4.dp)
+                            ) {
                                 FilterChip(
-                                    selected = isSelected,
+                                    selected = editableReceipt.splitAdminFee,
                                     onClick = {
-                                        editableReceipt = editableReceipt.copy(template = tpl)
+                                        editableReceipt = editableReceipt.copy(splitAdminFee = true)
                                         onUpdateReceipt(editableReceipt)
                                     },
-                                    label = { Text(if (tpl == ReceiptTemplate.COMPACT) "Ringkas" else "Detail", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                    label = { Text("Dipisah", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = OrangeContainer,
-                                        selectedLabelColor = PrimaryOrangeDark,
+                                        selectedContainerColor = PrimaryOrange,
+                                        selectedLabelColor = Color.White,
+                                        containerColor = LightSurfaceSecondary,
+                                        labelColor = TextSecondary
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
+                                FilterChip(
+                                    selected = !editableReceipt.splitAdminFee,
+                                    onClick = {
+                                        editableReceipt = editableReceipt.copy(splitAdminFee = false)
+                                        onUpdateReceipt(editableReceipt)
+                                    },
+                                    label = { Text("Digabung", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = PrimaryOrange,
+                                        selectedLabelColor = Color.White,
                                         containerColor = LightSurfaceSecondary,
                                         labelColor = TextSecondary
                                     ),
@@ -247,23 +313,39 @@ fun PreviewScreen(
                 )
             }
 
-            // Quick Admin Fee Override Bar
+            // Customizable Quick Admin Fee Bar
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Biaya Admin Toko Cepat",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextSecondary
-                    )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val feePresets = listOf(0L, 2000L, 3000L, 5000L)
+                        Text(
+                            text = "Pilihan Cepat Biaya Admin Toko",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextSecondary
+                        )
+                        Text(
+                            text = "Saat ini: ${ReceiptFormatter.formatRupiah(editableReceipt.storeAdminFee)}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PrimaryOrange
+                        )
+                    }
+
+                    // Render dynamic user quick fee presets
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val feePresets = settings.getQuickFeeList()
                         feePresets.forEach { fee ->
                             val isSelected = editableReceipt.storeAdminFee == fee
                             Button(
@@ -271,13 +353,12 @@ fun PreviewScreen(
                                     editableReceipt = editableReceipt.copy(storeAdminFee = fee)
                                     onUpdateReceipt(editableReceipt)
                                 },
-                                modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if (isSelected) PrimaryOrange else LightSurfaceSecondary,
                                     contentColor = if (isSelected) Color.White else TextPrimary
                                 ),
                                 shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     text = if (fee == 0L) "Gratis" else "Rp ${fee / 1000}k",
@@ -285,6 +366,19 @@ fun PreviewScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
+                        }
+
+                        // Custom fee button on the fly
+                        OutlinedButton(
+                            onClick = { showCustomFeeDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("+ Custom", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -341,6 +435,49 @@ fun PreviewScreen(
             }
         }
     }
+
+    // Custom Admin Fee Input Dialog
+    if (showCustomFeeDialog) {
+        AlertDialog(
+            onDismissRequest = { showCustomFeeDialog = false },
+            containerColor = LightSurface,
+            title = {
+                Text(text = "Nominal Admin Toko Khusus", color = TextPrimary, fontWeight = FontWeight.Bold)
+            },
+            text = {
+                OutlinedTextField(
+                    value = customFeeText,
+                    onValueChange = { customFeeText = it.filter(Char::isDigit) },
+                    label = { Text("Biaya Admin Toko (Rp)") },
+                    placeholder = { Text("Contoh: 1500, 3500, 7000") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val fee = customFeeText.toLongOrNull() ?: 0L
+                        editableReceipt = editableReceipt.copy(storeAdminFee = fee)
+                        onUpdateReceipt(editableReceipt)
+                        showCustomFeeDialog = false
+                        customFeeText = ""
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Terapkan", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCustomFeeDialog = false }) {
+                    Text("Batal", color = TextSecondary)
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -354,7 +491,7 @@ private fun EditFieldsForm(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Edit Detail Transaksi",
+                text = "Edit Detail Transaksi Lengkap",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -374,15 +511,40 @@ private fun EditFieldsForm(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Admin Fee Toko
+            // Biaya Admin Bank & Admin Toko
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = receipt.originalAdminFee.toString(),
+                    onValueChange = {
+                        val fee = it.filter(Char::isDigit).toLongOrNull() ?: 0L
+                        onReceiptChanged(receipt.copy(originalAdminFee = fee))
+                    },
+                    label = { Text("Admin Bank (Rp)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                OutlinedTextField(
+                    value = receipt.storeAdminFee.toString(),
+                    onValueChange = {
+                        val fee = it.filter(Char::isDigit).toLongOrNull() ?: 0L
+                        onReceiptChanged(receipt.copy(storeAdminFee = fee))
+                    },
+                    label = { Text("Admin Toko (Rp)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
+            // Metode Transfer
             OutlinedTextField(
-                value = receipt.storeAdminFee.toString(),
-                onValueChange = {
-                    val fee = it.filter(Char::isDigit).toLongOrNull() ?: 0L
-                    onReceiptChanged(receipt.copy(storeAdminFee = fee))
-                },
-                label = { Text("Biaya Admin Toko (Rp)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                value = receipt.transferMethod,
+                onValueChange = { onReceiptChanged(receipt.copy(transferMethod = it)) },
+                label = { Text("Metode (misal: BI-FAST / Online / Sesama)") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = modernTextFieldColors(),
                 shape = RoundedCornerShape(12.dp)
@@ -458,11 +620,11 @@ private fun EditFieldsForm(
                 )
             }
 
-            // Catatan
+            // Catatan / Berita
             OutlinedTextField(
                 value = receipt.notes,
                 onValueChange = { onReceiptChanged(receipt.copy(notes = it)) },
-                label = { Text("Catatan Tambahan (Opsional)") },
+                label = { Text("Catatan / Berita Transaksi") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = modernTextFieldColors(),
                 shape = RoundedCornerShape(12.dp)

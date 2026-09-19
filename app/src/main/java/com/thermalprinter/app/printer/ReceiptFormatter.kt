@@ -22,9 +22,7 @@ object ReceiptFormatter {
     ): ByteArray {
         val driver = EscPosDriver(lineChars = 32).init()
 
-        // Print copies if requested
         val copies = (settings.copies).coerceIn(1, 5)
-        val allBytes = mutableListOf<Byte>()
 
         for (copyIndex in 1..copies) {
             val isCopy = copyIndex > 1 || receipt.isReprint
@@ -72,16 +70,29 @@ object ReceiptFormatter {
             driver.twoColumn("Sumber", receipt.source.displayName.take(18))
         }
         driver.twoColumn("Jenis", receipt.transactionType.take(18))
+        if (receipt.transferMethod.isNotBlank()) {
+            driver.twoColumn("Metode", receipt.transferMethod.take(18))
+        }
         if (receipt.receiverName.isNotBlank()) {
             driver.twoColumn("Penerima", receipt.receiverName.take(18))
         }
 
         driver.divider('-')
 
-        // Nominal & Admin
+        // Nominal & Admin Fee (Split vs Combined)
         driver.twoColumn("Nominal", formatRupiah(receipt.transferAmount))
-        if (settings.showAdminFee && receipt.storeAdminFee > 0) {
-            driver.twoColumn("Biaya Admin", formatRupiah(receipt.storeAdminFee))
+
+        if (receipt.splitAdminFee) {
+            if (receipt.originalAdminFee > 0) {
+                driver.twoColumn("Admin Bank", formatRupiah(receipt.originalAdminFee))
+            }
+            if (settings.showAdminFee && receipt.storeAdminFee > 0) {
+                driver.twoColumn("Admin Toko", formatRupiah(receipt.storeAdminFee))
+            }
+        } else {
+            if (settings.showAdminFee && receipt.totalAdminFee() > 0) {
+                driver.twoColumn("Total Admin", formatRupiah(receipt.totalAdminFee()))
+            }
         }
 
         driver.doubleDivider()
@@ -101,6 +112,9 @@ object ReceiptFormatter {
         if (dateTime.isNotBlank()) {
             driver.twoColumn("Waktu", dateTime)
         }
+        if (receipt.notes.isNotBlank()) {
+            driver.line("Ket: ${receipt.notes}")
+        }
 
         // Footer
         if (settings.footer.isNotBlank()) {
@@ -108,6 +122,7 @@ object ReceiptFormatter {
             driver.alignCenter()
             driver.line(settings.footer)
         }
+        driver.line("~ ARBCN ~")
     }
 
     private fun formatDetailed(
@@ -148,6 +163,9 @@ object ReceiptFormatter {
             driver.twoColumn("Layanan", receipt.source.displayName.take(18))
         }
         driver.twoColumn("Transaksi", receipt.transactionType.take(18))
+        if (receipt.transferMethod.isNotBlank()) {
+            driver.twoColumn("Metode", receipt.transferMethod.take(18))
+        }
 
         driver.divider('-')
 
@@ -172,10 +190,20 @@ object ReceiptFormatter {
 
         driver.divider('-')
 
-        // Amount calculation
+        // Amount calculation (Split vs Combined)
         driver.twoColumn("Nominal Transfer", formatRupiah(receipt.transferAmount))
-        if (settings.showAdminFee) {
-            driver.twoColumn("Biaya Admin Toko", formatRupiah(receipt.storeAdminFee))
+
+        if (receipt.splitAdminFee) {
+            if (receipt.originalAdminFee > 0) {
+                driver.twoColumn("Biaya Admin Bank", formatRupiah(receipt.originalAdminFee))
+            }
+            if (settings.showAdminFee) {
+                driver.twoColumn("Biaya Admin Toko", formatRupiah(receipt.storeAdminFee))
+            }
+        } else {
+            if (settings.showAdminFee) {
+                driver.twoColumn("Total Biaya Admin", formatRupiah(receipt.totalAdminFee()))
+            }
         }
 
         driver.doubleDivider()
@@ -208,6 +236,6 @@ object ReceiptFormatter {
         if (settings.footer.isNotBlank()) {
             driver.line(settings.footer)
         }
-        driver.line("~ Thermal Printer App ~")
+        driver.line("~ ARBCN Thermal Printer ~")
     }
 }

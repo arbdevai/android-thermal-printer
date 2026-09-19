@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     onManualInputText = { text ->
-                                        processText(text, settings.defaultAdminFee)
+                                        processText(text, settings.defaultAdminFee, settings.splitAdminFee)
                                         navController.navigate(NavRoute.Preview.route)
                                     },
                                     onSelectReceipt = { receipt ->
@@ -322,8 +322,8 @@ class MainActivity : ComponentActivity() {
             intent.type?.startsWith("text/") == true -> {
                 val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return
                 lifecycleScope.launch {
-                    val defaultFee = appData.settings.first().defaultAdminFee
-                    processText(sharedText, defaultFee)
+                    val currentSettings = appData.settings.first()
+                    processText(sharedText, currentSettings.defaultAdminFee, currentSettings.splitAdminFee)
                 }
             }
             intent.type?.startsWith("image/") == true -> {
@@ -338,8 +338,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun processText(text: String, defaultFee: Long) {
-        val parsed = ReceiptParserEngine.parse(text, defaultFee)
+    private fun processText(text: String, defaultFee: Long, splitAdminFee: Boolean) {
+        val parsed = ReceiptParserEngine.parse(text, defaultFee, splitAdminFee)
         currentReceiptState.value = parsed
     }
 
@@ -348,9 +348,13 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             try {
                 val ocrResult = ocrManager.recognizeText(uri)
-                val defaultFee = appData.settings.first().defaultAdminFee
+                val currentSettings = appData.settings.first()
                 val extractedText = ocrResult.getOrNull().orEmpty()
-                val parsed = ReceiptParserEngine.parse(extractedText, defaultFee)
+                val parsed = ReceiptParserEngine.parse(
+                    extractedText,
+                    currentSettings.defaultAdminFee,
+                    currentSettings.splitAdminFee
+                )
                 currentReceiptState.value = parsed
                 onCompleted?.invoke()
             } catch (e: Exception) {

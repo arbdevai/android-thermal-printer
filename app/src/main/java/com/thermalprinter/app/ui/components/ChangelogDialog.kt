@@ -29,17 +29,29 @@ data class ReleaseLog(
 
 val APP_CHANGELOG = listOf(
     ReleaseLog(
-        version = "v1.1.0",
+        version = "v1.2.0",
         date = "September 2026",
         isLatest = true,
+        changes = listOf(
+            "Arsitektur Dedicated Strategy Parser untuk 8 Bank & E-Wallet (BCA, BRImo, Livin, DANA, GoPay, OVO, ShopeePay, SeaBank)",
+            "Ekstraksi data super presisi: Metode transfer (BI-FAST/Online/Sesama), Berita/Catatan, dan No. Referensi lengkap",
+            "Opsi Biaya Admin Fleksibel: Pilihan rincian Dipisah (Admin Bank + Admin Toko) atau Digabung",
+            "Kustomisasi Pilihan Cepat Admin Toko (Custom Presets di Pengaturan & Tombol +Custom langsung di nota)",
+            "Penyempurnaan formatting nota 58mm ESC/POS dengan rincian biaya transparan",
+            "Konsistensi penandatanganan APK v1+v2+v3"
+        )
+    ),
+    ReleaseLog(
+        version = "v1.1.0",
+        date = "September 2026",
+        isLatest = false,
         changes = listOf(
             "Rebranding resmi aplikasi menjadi ARBCN",
             "Tema Baru Orange Light 2026 dengan teks High-Contrast Deep Slate yang tajam & jelas",
             "Floating Pill Dock Navbar: navigasi modern melayang menggantikan navbar kotak lama",
             "Fitur Upload & Cetak Logo Toko dari galeri dengan dithering monokrom presisi 58mm",
             "Hero Card & Carousel Banners interaktif pada layar Beranda",
-            "Penandatanganan Konsisten APK (Signature Scheme v1 + v2 + v3)",
-            "Menu Catatan Rilis & Changelog terintegrasi di aplikasi"
+            "Penandatanganan Konsisten APK (Signature Scheme v1 + v2 + v3)"
         )
     ),
     ReleaseLog(
@@ -48,7 +60,7 @@ val APP_CHANGELOG = listOf(
         isLatest = false,
         changes = listOf(
             "Rilis perdana aplikasi pencetak struk thermal Bluetooth 58mm",
-            "Offline OCR Google ML Kit & Parser 8 Bank/E-Wallet (BCA, BRImo, Livin, DANA, GoPay, OVO, ShopeePay, SeaBank)",
+            "Offline OCR Google ML Kit & Parser 8 Bank/E-Wallet",
             "Driver ESC/POS dengan template Ringkas dan Detail Lengkap",
             "Penyimpanan riwayat transaksi lokal Room Database & ekspor CSV"
         )

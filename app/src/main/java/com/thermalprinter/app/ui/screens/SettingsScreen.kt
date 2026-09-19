@@ -592,6 +592,71 @@ fun SettingsScreen(
                             )
                         )
                     }
+
+                    // Split vs Combined Admin Fee Toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(
+                                text = "Pisahkan Admin Bank & Admin Toko",
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = "Jika aktif: Admin Bank & Toko dirinci terpisah. Jika mati: digabung jadi satu.",
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Switch(
+                            checked = editableSettings.splitAdminFee,
+                            onCheckedChange = { editableSettings = editableSettings.copy(splitAdminFee = it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = PrimaryOrange
+                            )
+                        )
+                    }
+
+                    // Custom Quick Fee Presets Input
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        OutlinedTextField(
+                            value = editableSettings.quickFeePresets,
+                            onValueChange = { editableSettings = editableSettings.copy(quickFeePresets = it) },
+                            label = { Text("Kustomisasi Pilihan Cepat Admin (Pisahkan Koma)") },
+                            placeholder = { Text("Contoh: 0, 1000, 2000, 2500, 3000, 5000") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = modernTextFieldColors(),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        // Live preview of chips
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            editableSettings.getQuickFeeList().forEach { fee ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = OrangeContainer
+                                ) {
+                                    Text(
+                                        text = if (fee == 0L) "Gratis" else "Rp ${fee / 1000}k",
+                                        color = PrimaryOrangeDark,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -651,7 +716,7 @@ fun SettingsScreen(
                                 color = TextPrimary
                             )
                             Text(
-                                text = "Versi 1.1.0 (Build 2) • Signature v1+v2+v3",
+                                text = "Versi 1.2.0 (Build 3) • Signature v1+v2+v3",
                                 fontSize = 11.sp,
                                 color = TextSecondary
                             )

@@ -4,13 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -125,7 +123,7 @@ fun ReceiptPaperPreview(
                 )
             }
             Text(
-                text = "~ Terima Kasih ~",
+                text = "~ ARBCN ~",
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
                 color = PaperTextMuted,
@@ -142,6 +140,9 @@ private fun CompactContent(receipt: TransactionReceipt, settings: StoreSettings)
         ReceiptRow(label = "Sumber", value = receipt.source.displayName.take(18))
     }
     ReceiptRow(label = "Jenis", value = receipt.transactionType.take(18))
+    if (receipt.transferMethod.isNotBlank()) {
+        ReceiptRow(label = "Metode", value = receipt.transferMethod.take(18))
+    }
     if (receipt.receiverName.isNotBlank()) {
         ReceiptRow(label = "Penerima", value = receipt.receiverName.take(18))
     }
@@ -151,8 +152,18 @@ private fun CompactContent(receipt: TransactionReceipt, settings: StoreSettings)
     Spacer(modifier = Modifier.height(6.dp))
 
     ReceiptRow(label = "Nominal", value = ReceiptFormatter.formatRupiah(receipt.transferAmount))
-    if (settings.showAdminFee && receipt.storeAdminFee > 0) {
-        ReceiptRow(label = "Biaya Admin", value = ReceiptFormatter.formatRupiah(receipt.storeAdminFee))
+
+    if (receipt.splitAdminFee) {
+        if (receipt.originalAdminFee > 0) {
+            ReceiptRow(label = "Admin Bank", value = ReceiptFormatter.formatRupiah(receipt.originalAdminFee))
+        }
+        if (settings.showAdminFee && receipt.storeAdminFee > 0) {
+            ReceiptRow(label = "Admin Toko", value = ReceiptFormatter.formatRupiah(receipt.storeAdminFee))
+        }
+    } else {
+        if (settings.showAdminFee && receipt.totalAdminFee() > 0) {
+            ReceiptRow(label = "Total Admin", value = ReceiptFormatter.formatRupiah(receipt.totalAdminFee()))
+        }
     }
 
     Spacer(modifier = Modifier.height(6.dp))
@@ -192,6 +203,9 @@ private fun CompactContent(receipt: TransactionReceipt, settings: StoreSettings)
     if (dateTime.isNotBlank()) {
         ReceiptRow(label = "Waktu", value = dateTime)
     }
+    if (receipt.notes.isNotBlank()) {
+        ReceiptRow(label = "Catatan", value = receipt.notes.take(18))
+    }
 }
 
 @Composable
@@ -201,6 +215,9 @@ private fun DetailedContent(receipt: TransactionReceipt, settings: StoreSettings
         ReceiptRow(label = "Layanan", value = receipt.source.displayName.take(18))
     }
     ReceiptRow(label = "Transaksi", value = receipt.transactionType.take(18))
+    if (receipt.transferMethod.isNotBlank()) {
+        ReceiptRow(label = "Metode", value = receipt.transferMethod.take(18))
+    }
 
     Spacer(modifier = Modifier.height(6.dp))
     ReceiptDashedDivider()
@@ -209,6 +226,9 @@ private fun DetailedContent(receipt: TransactionReceipt, settings: StoreSettings
     if (receipt.senderName.isNotBlank()) {
         ReceiptRow(label = "Pengirim", value = receipt.senderName.take(18))
     }
+    if (receipt.senderAccount.isNotBlank()) {
+        ReceiptRow(label = "No. Sumber", value = receipt.senderAccount.take(18))
+    }
     if (receipt.receiverName.isNotBlank()) {
         ReceiptRow(label = "Penerima", value = receipt.receiverName.take(18))
     }
@@ -216,7 +236,7 @@ private fun DetailedContent(receipt: TransactionReceipt, settings: StoreSettings
         ReceiptRow(label = "Bank Tujuan", value = receipt.receiverBank.take(18))
     }
     if (receipt.receiverAccount.isNotBlank()) {
-        ReceiptRow(label = "No. Rek/HP", value = receipt.receiverAccount.take(18))
+        ReceiptRow(label = "No. Tujuan", value = receipt.receiverAccount.take(18))
     }
 
     Spacer(modifier = Modifier.height(6.dp))
@@ -224,8 +244,18 @@ private fun DetailedContent(receipt: TransactionReceipt, settings: StoreSettings
     Spacer(modifier = Modifier.height(6.dp))
 
     ReceiptRow(label = "Nominal", value = ReceiptFormatter.formatRupiah(receipt.transferAmount))
-    if (settings.showAdminFee) {
-        ReceiptRow(label = "Admin Toko", value = ReceiptFormatter.formatRupiah(receipt.storeAdminFee))
+
+    if (receipt.splitAdminFee) {
+        if (receipt.originalAdminFee > 0) {
+            ReceiptRow(label = "Admin Bank", value = ReceiptFormatter.formatRupiah(receipt.originalAdminFee))
+        }
+        if (settings.showAdminFee) {
+            ReceiptRow(label = "Admin Toko", value = ReceiptFormatter.formatRupiah(receipt.storeAdminFee))
+        }
+    } else {
+        if (settings.showAdminFee) {
+            ReceiptRow(label = "Total Admin", value = ReceiptFormatter.formatRupiah(receipt.totalAdminFee()))
+        }
     }
 
     Spacer(modifier = Modifier.height(6.dp))
