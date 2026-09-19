@@ -13,16 +13,16 @@
                 android:startY="0"
                 android:endX="108"
                 android:endY="108">
-                <item android:offset="0.0" android:color="#FF0F172A" />
-                <item android:offset="0.5" android:color="#FF090D16" />
-                <item android:offset="1.0" android:color="#FF000000" />
+                <item android:offset="0.0" android:color="#FFFF7A00" />
+                <item android:offset="0.5" android:color="#FFFF5500" />
+                <item android:offset="1.0" android:color="#FFE64A00" />
             </gradient>
         </aapt:attr>
     </path>
-    <!-- Subtle tech accent glow -->
+    <!-- Soft warm glow ring -->
     <path
         android:pathData="M54,10 A44,44 0 0,0 10,54 A44,44 0 0,0 54,98 A44,44 0 0,0 98,54 A44,44 0 0,0 54,10 Z"
-        android:strokeWidth="0.75"
-        android:strokeColor="#2038BDF8"
+        android:strokeWidth="1.5"
+        android:strokeColor="#40FFFFFF"
         android:fillColor="#00000000" />
 </vector>

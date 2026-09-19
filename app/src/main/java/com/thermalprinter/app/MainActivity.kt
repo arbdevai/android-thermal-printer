@@ -11,11 +11,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,6 +28,7 @@ import com.thermalprinter.app.domain.model.TransactionReceipt
 import com.thermalprinter.app.domain.parser.ReceiptParserEngine
 import com.thermalprinter.app.ocr.OcrManager
 import com.thermalprinter.app.printer.ReceiptFormatter
+import com.thermalprinter.app.ui.components.FloatingNavBar
 import com.thermalprinter.app.ui.navigation.NavRoute
 import com.thermalprinter.app.ui.screens.HistoryScreen
 import com.thermalprinter.app.ui.screens.HomeScreen
@@ -77,86 +77,26 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(
                     snackbarHost = { SnackbarHost(snackbarHostState) },
+                    containerColor = LightBackground,
                     bottomBar = {
-                        NavigationBar(
-                            containerColor = DarkSurface,
-                            contentColor = TextPrimary
-                        ) {
-                            NavigationBarItem(
-                                selected = currentRoute == NavRoute.Home.route,
-                                onClick = {
-                                    navController.navigate(NavRoute.Home.route) {
+                        FloatingNavBar(
+                            currentRoute = currentRoute,
+                            onNavigate = { route ->
+                                navController.navigate(route) {
+                                    if (route == NavRoute.Home.route) {
                                         popUpTo(NavRoute.Home.route) { inclusive = true }
-                                    }
-                                },
-                                icon = { Icon(Icons.Default.Home, contentDescription = "Beranda") },
-                                label = { Text("Beranda") },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = AccentBlue,
-                                    selectedTextColor = AccentBlue,
-                                    indicatorColor = DarkPanel,
-                                    unselectedIconColor = TextSecondary,
-                                    unselectedTextColor = TextSecondary
-                                )
-                            )
-                            NavigationBarItem(
-                                selected = currentRoute == NavRoute.Preview.route,
-                                onClick = {
-                                    navController.navigate(NavRoute.Preview.route) {
+                                    } else {
                                         launchSingleTop = true
                                     }
-                                },
-                                icon = { Icon(Icons.Default.Receipt, contentDescription = "Cetak") },
-                                label = { Text("Cetak") },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = AccentBlue,
-                                    selectedTextColor = AccentBlue,
-                                    indicatorColor = DarkPanel,
-                                    unselectedIconColor = TextSecondary,
-                                    unselectedTextColor = TextSecondary
-                                )
-                            )
-                            NavigationBarItem(
-                                selected = currentRoute == NavRoute.History.route,
-                                onClick = {
-                                    navController.navigate(NavRoute.History.route) {
-                                        launchSingleTop = true
-                                    }
-                                },
-                                icon = { Icon(Icons.Default.History, contentDescription = "Riwayat") },
-                                label = { Text("Riwayat") },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = AccentBlue,
-                                    selectedTextColor = AccentBlue,
-                                    indicatorColor = DarkPanel,
-                                    unselectedIconColor = TextSecondary,
-                                    unselectedTextColor = TextSecondary
-                                )
-                            )
-                            NavigationBarItem(
-                                selected = currentRoute == NavRoute.Settings.route,
-                                onClick = {
-                                    navController.navigate(NavRoute.Settings.route) {
-                                        launchSingleTop = true
-                                    }
-                                },
-                                icon = { Icon(Icons.Default.Settings, contentDescription = "Pengaturan") },
-                                label = { Text("Pengaturan") },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = AccentBlue,
-                                    selectedTextColor = AccentBlue,
-                                    indicatorColor = DarkPanel,
-                                    unselectedIconColor = TextSecondary,
-                                    unselectedTextColor = TextSecondary
-                                )
-                            )
-                        }
+                                }
+                            }
+                        )
                     }
                 ) { innerPadding ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(SolidBlack)
+                            .background(LightBackground)
                             .padding(innerPadding)
                     ) {
                         NavHost(
@@ -210,10 +150,13 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onPrintReceipt = { toPrint ->
                                         scope.launch {
-                                            val bytes = ReceiptFormatter.buildEscPos(toPrint, settings)
+                                            val logoBitmap = if (settings.showLogo && settings.logoPath.isNotBlank()) {
+                                                appData.loadLogoBitmap(settings.logoPath)
+                                            } else null
+
+                                            val bytes = ReceiptFormatter.buildEscPos(toPrint, settings, logoBitmap)
                                             val printResult = printerManager.printBytes(bytes)
                                             if (printResult.isSuccess) {
-                                                // Save to database
                                                 appData.save(toPrint.copy(isReprint = true, printCount = toPrint.printCount + 1))
                                                 snackbarHostState.showSnackbar("Nota berhasil dicetak!")
                                             } else {
@@ -247,9 +190,14 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onReprintReceipt = { toReprint ->
                                         scope.launch {
+                                            val logoBitmap = if (settings.showLogo && settings.logoPath.isNotBlank()) {
+                                                appData.loadLogoBitmap(settings.logoPath)
+                                            } else null
+
                                             val bytes = ReceiptFormatter.buildEscPos(
                                                 toReprint.copy(isReprint = true),
-                                                settings
+                                                settings,
+                                                logoBitmap
                                             )
                                             val res = printerManager.printBytes(bytes)
                                             if (res.isSuccess) {
@@ -288,6 +236,22 @@ class MainActivity : ComponentActivity() {
                                         scope.launch {
                                             appData.saveSettings(updatedSettings)
                                             snackbarHostState.showSnackbar("Pengaturan berhasil disimpan")
+                                        }
+                                    },
+                                    onPickLogo = { logoUri ->
+                                        scope.launch {
+                                            val savedPath = appData.saveLogoFromUri(logoUri)
+                                            if (savedPath.isNotBlank()) {
+                                                snackbarHostState.showSnackbar("Logo toko berhasil diperbarui")
+                                            } else {
+                                                snackbarHostState.showSnackbar("Gagal menyimpan logo")
+                                            }
+                                        }
+                                    },
+                                    onRemoveLogo = {
+                                        scope.launch {
+                                            appData.removeLogo()
+                                            snackbarHostState.showSnackbar("Logo toko dihapus")
                                         }
                                     },
                                     onConnectPrinter = { address ->
@@ -333,10 +297,10 @@ class MainActivity : ComponentActivity() {
                         if (isOcrProcessing.value) {
                             Surface(
                                 modifier = Modifier.fillMaxSize(),
-                                color = SolidBlack.copy(alpha = 0.7f)
+                                color = Color.Black.copy(alpha = 0.4f)
                             ) {
                                 Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                                    CircularProgressIndicator(color = AccentBlue)
+                                    CircularProgressIndicator(color = PrimaryOrange)
                                 }
                             }
                         }

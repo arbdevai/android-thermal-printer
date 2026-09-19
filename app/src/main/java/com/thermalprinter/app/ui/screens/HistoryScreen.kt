@@ -56,38 +56,51 @@ fun HistoryScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SolidBlack)
+            .background(LightBackground)
             .padding(horizontal = 16.dp)
     ) {
         // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp),
+                .padding(vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(
                     text = "Riwayat Nota",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "${receipts.size} transaksi tersimpan lokal",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "${receipts.size} transaksi tersimpan lokal di HP",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
                     color = TextSecondary
                 )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (receipts.isNotEmpty()) {
-                    IconButton(onClick = onExportHistory) {
-                        Icon(Icons.Default.FileDownload, contentDescription = "Ekspor", tint = AccentBlue)
+                    IconButton(
+                        onClick = onExportHistory,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(OrangeContainer)
+                    ) {
+                        Icon(Icons.Default.FileDownload, contentDescription = "Ekspor", tint = PrimaryOrange, modifier = Modifier.size(20.dp))
                     }
-                    IconButton(onClick = { showClearConfirmDialog = true }) {
-                        Icon(Icons.Default.DeleteSweep, contentDescription = "Hapus Semua", tint = ErrorRed)
+                    IconButton(
+                        onClick = { showClearConfirmDialog = true },
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(ErrorContainer)
+                    ) {
+                        Icon(Icons.Default.DeleteSweep, contentDescription = "Hapus Semua", tint = ErrorRed, modifier = Modifier.size(20.dp))
                     }
                 }
             }
@@ -97,8 +110,8 @@ fun HistoryScreen(
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text("Cari nama, ref, atau jenis...", color = TextMuted, fontSize = 13.sp) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextMuted) },
+            placeholder = { Text("Cari nama, nomor ref, atau jenis...", color = TextMuted, fontSize = 13.sp) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = PrimaryOrange) },
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { searchQuery = "" }) {
@@ -111,12 +124,12 @@ fun HistoryScreen(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary,
-                focusedBorderColor = AccentBlue,
-                unfocusedBorderColor = GlassBorder,
-                focusedContainerColor = DarkPanel,
-                unfocusedContainerColor = DarkPanel
+                focusedBorderColor = PrimaryOrange,
+                unfocusedBorderColor = BorderLight,
+                focusedContainerColor = LightSurface,
+                unfocusedContainerColor = LightSurface
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(14.dp)
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -131,13 +144,14 @@ fun HistoryScreen(
             FilterChip(
                 selected = selectedBankFilter == null,
                 onClick = { selectedBankFilter = null },
-                label = { Text("Semua", fontSize = 12.sp) },
+                label = { Text("Semua", fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = AccentBlue,
-                    selectedLabelColor = TextPrimary,
-                    containerColor = DarkPanel,
+                    selectedContainerColor = PrimaryOrange,
+                    selectedLabelColor = Color.White,
+                    containerColor = LightSurface,
                     labelColor = TextSecondary
-                )
+                ),
+                shape = RoundedCornerShape(14.dp)
             )
 
             BankSource.entries.filter { it != BankSource.OTHER }.forEach { bank ->
@@ -145,13 +159,14 @@ fun HistoryScreen(
                 FilterChip(
                     selected = isSelected,
                     onClick = { selectedBankFilter = if (isSelected) null else bank },
-                    label = { Text(bank.name, fontSize = 12.sp) },
+                    label = { Text(bank.name, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = Color(bank.brandColorHex),
                         selectedLabelColor = Color.White,
-                        containerColor = DarkPanel,
+                        containerColor = LightSurface,
                         labelColor = TextSecondary
-                    )
+                    ),
+                    shape = RoundedCornerShape(14.dp)
                 )
             }
         }
@@ -167,32 +182,40 @@ fun HistoryScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.ReceiptLong,
-                        contentDescription = null,
-                        tint = TextMuted,
-                        modifier = Modifier.size(54.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(OrangeContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = PrimaryOrange,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = if (searchQuery.isNotEmpty() || selectedBankFilter != null)
                             "Tidak ada transaksi yang cocok"
                         else
                             "Belum ada riwayat transaksi",
-                        color = TextSecondary,
+                        color = TextPrimary,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
         } else {
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 80.dp),
+                contentPadding = PaddingValues(bottom = 100.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(filteredReceipts, key = { it.id }) { receipt ->
-                    HistoryReceiptItem(
+                    HistoryReceiptItemModern(
                         receipt = receipt,
                         onClick = { onSelectReceipt(receipt) },
                         onReprint = { onReprintReceipt(receipt) },
@@ -207,11 +230,11 @@ fun HistoryScreen(
     if (showClearConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showClearConfirmDialog = false },
-            containerColor = DarkSurface,
-            title = { Text("Hapus Semua Riwayat?", color = TextPrimary) },
+            containerColor = LightSurface,
+            title = { Text("Hapus Semua Riwayat?", color = TextPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "Semua catatan riwayat transaksi yang tersimpan di memori perangkat ini akan dihapus secara permanen.",
+                    "Semua catatan riwayat transaksi yang tersimpan di HP akan dihapus secara permanen.",
                     color = TextSecondary
                 )
             },
@@ -221,9 +244,10 @@ fun HistoryScreen(
                         onClearAllReceipts()
                         showClearConfirmDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Ya, Hapus Semua", color = TextPrimary)
+                    Text("Ya, Hapus Semua", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -238,8 +262,8 @@ fun HistoryScreen(
     receiptToDelete?.let { receipt ->
         AlertDialog(
             onDismissRequest = { receiptToDelete = null },
-            containerColor = DarkSurface,
-            title = { Text("Hapus Nota Ini?", color = TextPrimary) },
+            containerColor = LightSurface,
+            title = { Text("Hapus Nota Ini?", color = TextPrimary, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
                     "Hapus transaksi ${receipt.source.displayName} sebesar ${ReceiptFormatter.formatRupiah(receipt.calculateTotal())}?",
@@ -252,9 +276,10 @@ fun HistoryScreen(
                         onDeleteReceipt(receipt.id)
                         receiptToDelete = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = ErrorRed),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Hapus", color = TextPrimary)
+                    Text("Hapus", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -267,7 +292,7 @@ fun HistoryScreen(
 }
 
 @Composable
-private fun HistoryReceiptItem(
+private fun HistoryReceiptItemModern(
     receipt: TransactionReceipt,
     onClick: () -> Unit,
     onReprint: () -> Unit,
@@ -275,7 +300,8 @@ private fun HistoryReceiptItem(
 ) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -292,15 +318,15 @@ private fun HistoryReceiptItem(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
-                            .background(Color(receipt.source.brandColorHex).copy(alpha = 0.2f)),
+                            .background(Color(receipt.source.brandColorHex).copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = receipt.source.name.take(3),
                             color = Color(receipt.source.brandColorHex),
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
                             fontSize = 11.sp
                         )
                     }
@@ -309,12 +335,12 @@ private fun HistoryReceiptItem(
                         Text(
                             text = receipt.receiverName.ifBlank { receipt.transactionType },
                             color = TextPrimary,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
                         Text(
                             text = "${receipt.transactionDate} ${receipt.transactionTime}".trim(),
-                            color = TextMuted,
+                            color = TextSecondary,
                             fontSize = 11.sp
                         )
                     }
@@ -323,14 +349,14 @@ private fun HistoryReceiptItem(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = ReceiptFormatter.formatRupiah(receipt.calculateTotal()),
-                        color = AccentBlue,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        color = PrimaryOrange,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 15.sp
                     )
                     if (receipt.storeAdminFee > 0) {
                         Text(
                             text = "+Adm ${ReceiptFormatter.formatRupiah(receipt.storeAdminFee)}",
-                            color = TextMuted,
+                            color = TextSecondary,
                             fontSize = 10.sp
                         )
                     }
@@ -340,12 +366,12 @@ private fun HistoryReceiptItem(
             if (receipt.referenceNumber.isNotBlank()) {
                 Text(
                     text = "Ref: ${receipt.referenceNumber}",
-                    color = TextMuted,
+                    color = TextSecondary,
                     fontSize = 11.sp
                 )
             }
 
-            Divider(color = GlassBorder)
+            Divider(color = BorderSubtle)
 
             // Bottom Actions inside card
             Row(
@@ -353,33 +379,46 @@ private fun HistoryReceiptItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (receipt.isReprint) "Status: Pernah Dicetak" else "Status: Tersimpan",
-                    color = TextMuted,
-                    fontSize = 11.sp
-                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (receipt.isReprint) OrangeContainer else LightSurfaceSecondary
+                ) {
+                    Text(
+                        text = if (receipt.isReprint) "Pernah Dicetak" else "Tersimpan",
+                        color = if (receipt.isReprint) PrimaryOrangeDark else TextSecondary,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    )
+                }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(
                         onClick = onReprint,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(OrangeContainer)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Print,
                             contentDescription = "Cetak Ulang",
-                            tint = AccentBlue,
-                            modifier = Modifier.size(18.dp)
+                            tint = PrimaryOrange,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                     IconButton(
                         onClick = onDelete,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(ErrorContainer)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Hapus",
-                            tint = TextMuted,
-                            modifier = Modifier.size(18.dp)
+                            tint = ErrorRed,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }

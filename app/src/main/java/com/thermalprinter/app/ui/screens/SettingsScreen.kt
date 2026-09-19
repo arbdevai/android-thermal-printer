@@ -1,9 +1,14 @@
 package com.thermalprinter.app.ui.screens
 
 import android.bluetooth.BluetoothDevice
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -13,10 +18,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.thermalprinter.app.domain.model.ReceiptTemplate
 import com.thermalprinter.app.domain.model.StoreSettings
 import com.thermalprinter.app.printer.PrinterConnectionStatus
@@ -29,6 +39,8 @@ fun SettingsScreen(
     printerStatus: PrinterConnectionStatus,
     pairedDevices: List<BluetoothDevice>,
     onSaveSettings: (StoreSettings) -> Unit,
+    onPickLogo: (Uri) -> Unit,
+    onRemoveLogo: () -> Unit,
     onConnectPrinter: (String) -> Unit,
     onDisconnectPrinter: () -> Unit,
     onTestPrint: () -> Unit,
@@ -39,12 +51,20 @@ fun SettingsScreen(
     var selectedDeviceAddress by remember { mutableStateOf(settings.printerAddress) }
     var showDeviceDropdown by remember { mutableStateOf(false) }
 
+    val logoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            onPickLogo(uri)
+        }
+    }
+
     val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SolidBlack)
+            .background(LightBackground)
     ) {
         // Header
         Row(
@@ -57,25 +77,27 @@ fun SettingsScreen(
             Column {
                 Text(
                     text = "Pengaturan",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = TextPrimary
                 )
                 Text(
-                    text = "Identitas Toko, Printer Bluetooth & Format",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Identitas Toko, Logo & Printer",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
                     color = TextSecondary
                 )
             }
 
             Button(
                 onClick = { onSaveSettings(editableSettings) },
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue),
-                shape = RoundedCornerShape(10.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
             ) {
                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Simpan", fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Simpan", fontWeight = FontWeight.Bold)
             }
         }
 
@@ -86,7 +108,7 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Section 1: Bluetooth Printer
+            // Section 1: Logo Toko (NEW FEATURE)
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -96,29 +118,181 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Bluetooth, contentDescription = null, tint = AccentCyan)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Image, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(18.dp))
+                        }
+                        Column {
+                            Text(
+                                text = "Logo Toko / Outlet",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Dicetak di bagian atas nota thermal 58mm",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    // Logo Preview if exists
+                    if (settings.logoPath.isNotBlank()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(LightSurfaceSecondary)
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Surface(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .border(1.dp, BorderLight, RoundedCornerShape(10.dp)),
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.White
+                            ) {
+                                AsyncImage(
+                                    model = settings.logoPath,
+                                    contentDescription = "Preview Logo",
+                                    modifier = Modifier.fillMaxSize().padding(4.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Logo Toko Terpasang",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "Otomatis di-dither ke hitam-putih",
+                                    fontSize = 11.sp,
+                                    color = TextSecondary
+                                )
+                            }
+
+                            IconButton(
+                                onClick = onRemoveLogo,
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(ErrorContainer)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = "Hapus Logo", tint = ErrorRed, modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { logoPickerLauncher.launch("image/*") },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange)
+                        ) {
+                            Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (settings.logoPath.isNotBlank()) "Ganti Logo" else "Unggah Logo",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "Printer Thermal Bluetooth 58mm",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary
+                            text = "Tampilkan Logo di Nota",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp
+                        )
+                        Switch(
+                            checked = editableSettings.showLogo,
+                            onCheckedChange = { editableSettings = editableSettings.copy(showLogo = it) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = PrimaryOrange
+                            )
                         )
                     }
+                }
+            }
 
-                    // Connection Status info
-                    val statusText = when (printerStatus) {
-                        is PrinterConnectionStatus.Connected -> "Terhubung: ${printerStatus.deviceName}"
-                        is PrinterConnectionStatus.Connecting -> "Menghubungkan ke ${printerStatus.deviceName}..."
-                        is PrinterConnectionStatus.Error -> "Gagal: ${printerStatus.message}"
-                        PrinterConnectionStatus.Disconnected -> "Belum terhubung ke printer"
-                    }
-                    val statusColor = when (printerStatus) {
-                        is PrinterConnectionStatus.Connected -> SuccessGreen
-                        is PrinterConnectionStatus.Connecting -> WarningAmber
-                        is PrinterConnectionStatus.Error -> ErrorRed
-                        PrinterConnectionStatus.Disconnected -> TextMuted
+            // Section 2: Bluetooth Printer
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Print, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(18.dp))
+                        }
+                        Column {
+                            Text(
+                                text = "Printer Bluetooth 58mm",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Protokol ESC/POS 32 karakter",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
                     }
 
-                    Text(text = statusText, color = statusColor, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    // Connection Status
+                    val (statusColor, statusBg, statusText) = when (printerStatus) {
+                        is PrinterConnectionStatus.Connected -> Triple(SuccessGreen, SuccessContainer, "Terhubung: ${printerStatus.deviceName}")
+                        is PrinterConnectionStatus.Connecting -> Triple(WarningAmber, WarningContainer, "Menghubungkan ke ${printerStatus.deviceName}...")
+                        is PrinterConnectionStatus.Error -> Triple(ErrorRed, ErrorContainer, "Gagal: ${printerStatus.message}")
+                        PrinterConnectionStatus.Disconnected -> Triple(TextSecondary, LightSurfaceSecondary, "Belum terhubung ke printer")
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = statusBg,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = statusText,
+                            color = statusColor,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
 
                     // Paired Device Picker
                     Box(modifier = Modifier.fillMaxWidth()) {
@@ -126,25 +300,26 @@ fun SettingsScreen(
                             onClick = { showDeviceDropdown = true },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(10.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary)
                         ) {
                             val selectedName = pairedDevices.find { it.address == selectedDeviceAddress }?.name ?: selectedDeviceAddress
                             Text(
-                                text = if (selectedDeviceAddress.isNotBlank()) "Printer: $selectedName" else "Pilih Printer Bluetooth Terpasang",
-                                modifier = Modifier.weight(1f)
+                                text = if (selectedDeviceAddress.isNotBlank()) "Printer: $selectedName" else "Pilih Printer Bluetooth",
+                                modifier = Modifier.weight(1f),
+                                fontWeight = FontWeight.Medium
                             )
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = PrimaryOrange)
                         }
 
                         DropdownMenu(
                             expanded = showDeviceDropdown,
                             onDismissRequest = { showDeviceDropdown = false },
-                            modifier = Modifier.background(DarkSurface)
+                            modifier = Modifier.background(LightSurface)
                         ) {
                             if (pairedDevices.isEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("Tidak ada perangkat Bluetooth tersambung. Pasangkan printer di pengaturan HP terlebih dahulu.", fontSize = 12.sp, color = TextMuted) },
+                                    text = { Text("Tidak ada printer Bluetooth paired. Sambungkan printer di pengaturan HP terlebih dahulu.", fontSize = 12.sp, color = TextSecondary) },
                                     onClick = { showDeviceDropdown = false }
                                 )
                             } else {
@@ -153,8 +328,8 @@ fun SettingsScreen(
                                     DropdownMenuItem(
                                         text = {
                                             Column {
-                                                Text(devName, color = TextPrimary, fontWeight = FontWeight.Medium)
-                                                Text(device.address, color = TextMuted, fontSize = 11.sp)
+                                                Text(devName, color = TextPrimary, fontWeight = FontWeight.Bold)
+                                                Text(device.address, color = TextSecondary, fontSize = 11.sp)
                                             }
                                         },
                                         onClick = {
@@ -180,9 +355,11 @@ fun SettingsScreen(
                             OutlinedButton(
                                 onClick = onDisconnectPrinter,
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed)
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = ErrorRed),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, ErrorRed)
                             ) {
-                                Text("Putuskan", fontSize = 12.sp)
+                                Text("Putuskan", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         } else {
                             Button(
@@ -193,19 +370,21 @@ fun SettingsScreen(
                                 },
                                 enabled = selectedDeviceAddress.isNotBlank(),
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange)
                             ) {
-                                Text("Hubungkan", fontSize = 12.sp)
+                                Text("Hubungkan", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
-                        Button(
+                        OutlinedButton(
                             onClick = onTestPrint,
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(containerColor = DarkSurface),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder)
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary)
                         ) {
-                            Text("Uji Cetak", fontSize = 12.sp, color = TextPrimary)
+                            Text("Uji Cetak", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -216,30 +395,33 @@ fun SettingsScreen(
                         OutlinedButton(
                             onClick = onFeedPaper,
                             modifier = Modifier.weight(1f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
                         ) {
-                            Text("Feed 3 Baris", fontSize = 11.sp)
+                            Text("Feed Kertas", fontSize = 11.sp)
                         }
                         OutlinedButton(
                             onClick = onCutPaper,
                             modifier = Modifier.weight(1f),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
                         ) {
                             Text("Cut Kertas", fontSize = 11.sp)
                         }
                     }
 
-                    // Copies Slider / Counter
+                    // Copies Counter
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Jumlah Salinan Cetak",
-                            color = TextSecondary,
+                            text = "Jumlah Salinan Cetak (Copies)",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 13.sp
                         )
                         Row(
@@ -253,13 +435,13 @@ fun SettingsScreen(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.Remove, contentDescription = null, tint = TextPrimary)
+                                Icon(Icons.Default.Remove, contentDescription = null, tint = PrimaryOrange)
                             }
                             Text(
                                 text = "${editableSettings.copies}x",
                                 color = TextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 15.sp
                             )
                             IconButton(
                                 onClick = {
@@ -268,14 +450,14 @@ fun SettingsScreen(
                                     }
                                 }
                             ) {
-                                Icon(Icons.Default.Add, contentDescription = null, tint = TextPrimary)
+                                Icon(Icons.Default.Add, contentDescription = null, tint = PrimaryOrange)
                             }
                         }
                     }
                 }
             }
 
-            // Section 2: Store Identity
+            // Section 3: Store Identity
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -285,10 +467,19 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Storefront, contentDescription = null, tint = AccentBlue)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Storefront, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(18.dp))
+                        }
                         Text(
                             text = "Identitas Toko / Loket",
-                            style = MaterialTheme.typography.titleMedium,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                     }
@@ -296,9 +487,10 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = editableSettings.storeName,
                         onValueChange = { editableSettings = editableSettings.copy(storeName = it) },
-                        label = { Text("Nama Toko / Outlet") },
+                        label = { Text("Nama Toko / Usaha") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors()
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     OutlinedTextField(
@@ -307,7 +499,8 @@ fun SettingsScreen(
                         label = { Text("Nomor WhatsApp / HP") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors()
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     OutlinedTextField(
@@ -315,7 +508,8 @@ fun SettingsScreen(
                         onValueChange = { editableSettings = editableSettings.copy(address = it) },
                         label = { Text("Alamat Toko (Opsional)") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors()
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     OutlinedTextField(
@@ -323,7 +517,8 @@ fun SettingsScreen(
                         onValueChange = { editableSettings = editableSettings.copy(ownerName = it) },
                         label = { Text("Nama Kasir / Pemilik") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors()
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     OutlinedTextField(
@@ -331,12 +526,13 @@ fun SettingsScreen(
                         onValueChange = { editableSettings = editableSettings.copy(footer = it) },
                         label = { Text("Pesan Footer Nota") },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors()
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
                     )
                 }
             }
 
-            // Section 3: Admin Fee Defaults
+            // Section 4: Admin Fee
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -346,10 +542,19 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = SuccessGreen)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.MonetizationOn, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(18.dp))
+                        }
                         Text(
-                            text = "Biaya Admin Standar",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = "Biaya Admin Toko",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
                             color = TextPrimary
                         )
                     }
@@ -360,10 +565,11 @@ fun SettingsScreen(
                             val fee = it.filter(Char::isDigit).toLongOrNull() ?: 0L
                             editableSettings = editableSettings.copy(defaultAdminFee = fee)
                         },
-                        label = { Text("Biaya Admin Toko Default (Rp)") },
+                        label = { Text("Biaya Admin Default (Rp)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors()
+                        colors = modernTextFieldColors(),
+                        shape = RoundedCornerShape(12.dp)
                     )
 
                     Row(
@@ -374,42 +580,41 @@ fun SettingsScreen(
                         Text(
                             text = "Tampilkan Biaya Admin di Nota",
                             color = TextPrimary,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 13.sp
                         )
                         Switch(
                             checked = editableSettings.showAdminFee,
                             onCheckedChange = { editableSettings = editableSettings.copy(showAdminFee = it) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = AccentBlue)
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = PrimaryOrange
+                            )
                         )
                     }
                 }
             }
 
-            // Section 4: Format & Toggles
+            // Section 5: Format Nota
             GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Tune, contentDescription = null, tint = AccentPurple)
-                        Text(
-                            text = "Opsi Tampilan Nota",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary
-                        )
-                    }
+                    Text(
+                        text = "Opsi Tampilan Nota",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
 
-                    ToggleRow(
+                    ToggleRowModern(
                         label = "Tampilkan Sumber / Bank",
                         checked = editableSettings.showSource,
                         onCheckedChange = { editableSettings = editableSettings.copy(showSource = it) }
                     )
 
-                    ToggleRow(
+                    ToggleRowModern(
                         label = "Tampilkan Nomor Referensi",
                         checked = editableSettings.showReference,
                         onCheckedChange = { editableSettings = editableSettings.copy(showReference = it) }
@@ -417,39 +622,13 @@ fun SettingsScreen(
                 }
             }
 
-            // Section 5: About & Local Storage Privacy
-            GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(Icons.Default.Security, contentDescription = null, tint = SuccessGreen)
-                        Text(
-                            text = "100% Offline & Privasi Terjaga",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextPrimary
-                        )
-                    }
-                    Text(
-                        text = "Aplikasi ini memproses OCR dan mencetak nota langsung di perangkat Anda tanpa mengirim data transaksi ke internet atau server pihak ketiga mana pun.",
-                        color = TextMuted,
-                        fontSize = 12.sp,
-                        lineHeight = 16.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
 
 @Composable
-private fun ToggleRow(
+private fun ToggleRowModern(
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
@@ -459,23 +638,26 @@ private fun ToggleRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, color = TextPrimary, fontSize = 13.sp)
+        Text(text = label, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = AccentBlue)
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = PrimaryOrange
+            )
         )
     }
 }
 
 @Composable
-private fun textFieldColors() = OutlinedTextFieldDefaults.colors(
+private fun modernTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = TextPrimary,
     unfocusedTextColor = TextPrimary,
-    focusedBorderColor = AccentBlue,
-    unfocusedBorderColor = GlassBorder,
-    focusedLabelColor = AccentBlue,
+    focusedBorderColor = PrimaryOrange,
+    unfocusedBorderColor = BorderLight,
+    focusedLabelColor = PrimaryOrange,
     unfocusedLabelColor = TextSecondary,
-    focusedContainerColor = DarkPanel,
-    unfocusedContainerColor = DarkPanel
+    focusedContainerColor = LightSurface,
+    unfocusedContainerColor = LightSurface
 )

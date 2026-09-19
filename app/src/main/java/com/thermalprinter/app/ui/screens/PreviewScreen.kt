@@ -47,7 +47,7 @@ fun PreviewScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SolidBlack)
+            .background(LightBackground)
     ) {
         // Top Toolbar
         Row(
@@ -60,13 +60,15 @@ fun PreviewScreen(
             Column {
                 Text(
                     text = "Pratinjau Nota 58mm",
-                    style = MaterialTheme.typography.titleLarge,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = TextPrimary
                 )
                 Text(
                     text = "${editableReceipt.source.displayName} • ${editableReceipt.transactionType}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = AccentBlue
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryOrange
                 )
             }
 
@@ -95,7 +97,7 @@ fun PreviewScreen(
                 Icon(
                     imageVector = Icons.Default.Share,
                     contentDescription = "Bagikan",
-                    tint = TextPrimary
+                    tint = PrimaryOrange
                 )
             }
         }
@@ -110,26 +112,30 @@ fun PreviewScreen(
             FilterChip(
                 selected = activeTab == 0,
                 onClick = { activeTab = 0 },
-                label = { Text("Pratinjau Nota Kertas") },
+                label = { Text("Pratinjau Nota Kertas", fontWeight = FontWeight.Bold) },
                 leadingIcon = { Icon(Icons.Default.Receipt, null, modifier = Modifier.size(16.dp)) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = AccentBlue,
-                    selectedLabelColor = TextPrimary,
-                    containerColor = DarkPanel,
+                    selectedContainerColor = PrimaryOrange,
+                    selectedLabelColor = Color.White,
+                    selectedLeadingIconColor = Color.White,
+                    containerColor = LightSurface,
                     labelColor = TextSecondary
-                )
+                ),
+                shape = RoundedCornerShape(20.dp)
             )
             FilterChip(
                 selected = activeTab == 1,
                 onClick = { activeTab = 1 },
-                label = { Text("Edit & Sesuaikan Data") },
+                label = { Text("Edit & Sesuaikan Data", fontWeight = FontWeight.Bold) },
                 leadingIcon = { Icon(Icons.Default.Edit, null, modifier = Modifier.size(16.dp)) },
                 colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = AccentBlue,
-                    selectedLabelColor = TextPrimary,
-                    containerColor = DarkPanel,
+                    selectedContainerColor = PrimaryOrange,
+                    selectedLabelColor = Color.White,
+                    selectedLeadingIconColor = Color.White,
+                    containerColor = LightSurface,
                     labelColor = TextSecondary
-                )
+                ),
+                shape = RoundedCornerShape(20.dp)
             )
         }
 
@@ -139,7 +145,7 @@ fun PreviewScreen(
                 .weight(1f)
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // Template & Source Selector Card
             GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -150,7 +156,7 @@ fun PreviewScreen(
                     Text(
                         text = "Pilih Bank / Sumber",
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Bold,
                         color = TextSecondary
                     )
 
@@ -166,8 +172,8 @@ fun PreviewScreen(
                             val bankColor = Color(bank.brandColorHex)
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) bankColor else DarkSurface,
-                                border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                                color = if (isSelected) bankColor else LightSurfaceSecondary,
+                                border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
                                 modifier = Modifier.padding(vertical = 2.dp),
                                 onClick = {
                                     editableReceipt = editableReceipt.copy(source = bank)
@@ -176,16 +182,16 @@ fun PreviewScreen(
                             ) {
                                 Text(
                                     text = bank.name,
-                                    color = if (isSelected) Color.White else TextSecondary,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) Color.White else TextPrimary,
+                                    fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
                                     fontSize = 12.sp,
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                 )
                             }
                         }
                     }
 
-                    Divider(color = GlassBorder)
+                    Divider(color = BorderSubtle)
 
                     // Template Selector
                     Row(
@@ -196,7 +202,7 @@ fun PreviewScreen(
                         Text(
                             text = "Format Template",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.Bold,
                             color = TextSecondary
                         )
 
@@ -209,13 +215,14 @@ fun PreviewScreen(
                                         editableReceipt = editableReceipt.copy(template = tpl)
                                         onUpdateReceipt(editableReceipt)
                                     },
-                                    label = { Text(if (tpl == ReceiptTemplate.COMPACT) "Ringkas" else "Detail", fontSize = 11.sp) },
+                                    label = { Text(if (tpl == ReceiptTemplate.COMPACT) "Ringkas" else "Detail", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = AccentCyan,
-                                        selectedLabelColor = SolidBlack,
-                                        containerColor = DarkSurface,
+                                        selectedContainerColor = OrangeContainer,
+                                        selectedLabelColor = PrimaryOrangeDark,
+                                        containerColor = LightSurfaceSecondary,
                                         labelColor = TextSecondary
-                                    )
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
                                 )
                             }
                         }
@@ -249,7 +256,7 @@ fun PreviewScreen(
                     Text(
                         text = "Biaya Admin Toko Cepat",
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.Bold,
                         color = TextSecondary
                     )
                     Row(
@@ -266,16 +273,16 @@ fun PreviewScreen(
                                 },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isSelected) AccentBlue else DarkSurface,
-                                    contentColor = if (isSelected) TextPrimary else TextSecondary
+                                    containerColor = if (isSelected) PrimaryOrange else LightSurfaceSecondary,
+                                    contentColor = if (isSelected) Color.White else TextPrimary
                                 ),
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 8.dp)
                             ) {
                                 Text(
                                     text = if (fee == 0L) "Gratis" else "Rp ${fee / 1000}k",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -283,13 +290,14 @@ fun PreviewScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         // Bottom Fixed Print Action Bar
         Surface(
-            color = DarkSurface,
-            border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder)
+            color = LightSurface,
+            shadowElevation = 8.dp,
+            border = androidx.compose.foundation.BorderStroke(1.dp, BorderSubtle)
         ) {
             Row(
                 modifier = Modifier
@@ -300,35 +308,34 @@ fun PreviewScreen(
             ) {
                 OutlinedButton(
                     onClick = { onSaveReceipt(editableReceipt) },
-                    shape = RoundedCornerShape(12.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, GlassBorder),
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary)
                 ) {
                     Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Simpan", fontSize = 13.sp)
+                    Text("Simpan", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Button(
-                    onClick = {
-                        onPrintReceipt(editableReceipt)
-                    },
+                    onClick = { onPrintReceipt(editableReceipt) },
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Print,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp),
-                        tint = TextPrimary
+                        tint = Color.White
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "CETAK NOTA",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         fontSize = 15.sp,
-                        color = TextPrimary
+                        color = Color.White
                     )
                 }
             }
@@ -348,7 +355,8 @@ private fun EditFieldsForm(
         ) {
             Text(
                 text = "Edit Detail Transaksi",
-                style = MaterialTheme.typography.titleMedium,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
 
@@ -362,7 +370,8 @@ private fun EditFieldsForm(
                 label = { Text("Nominal Transfer (Rp)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = modernTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             // Admin Fee Toko
@@ -375,7 +384,8 @@ private fun EditFieldsForm(
                 label = { Text("Biaya Admin Toko (Rp)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = modernTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             // Nama Penerima
@@ -384,7 +394,8 @@ private fun EditFieldsForm(
                 onValueChange = { onReceiptChanged(receipt.copy(receiverName = it)) },
                 label = { Text("Nama Penerima") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = modernTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             // Nama Pengirim
@@ -393,7 +404,8 @@ private fun EditFieldsForm(
                 onValueChange = { onReceiptChanged(receipt.copy(senderName = it)) },
                 label = { Text("Nama Pengirim") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = modernTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             // Bank / Akun Penerima
@@ -403,14 +415,16 @@ private fun EditFieldsForm(
                     onValueChange = { onReceiptChanged(receipt.copy(receiverBank = it)) },
                     label = { Text("Bank Tujuan") },
                     modifier = Modifier.weight(1f),
-                    colors = textFieldColors()
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = receipt.receiverAccount,
                     onValueChange = { onReceiptChanged(receipt.copy(receiverAccount = it)) },
                     label = { Text("No. Rek/HP") },
                     modifier = Modifier.weight(1f),
-                    colors = textFieldColors()
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
                 )
             }
 
@@ -420,7 +434,8 @@ private fun EditFieldsForm(
                 onValueChange = { onReceiptChanged(receipt.copy(referenceNumber = it)) },
                 label = { Text("No. Referensi / ID Transaksi") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = modernTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
             )
 
             // Tanggal & Waktu
@@ -430,14 +445,16 @@ private fun EditFieldsForm(
                     onValueChange = { onReceiptChanged(receipt.copy(transactionDate = it)) },
                     label = { Text("Tanggal") },
                     modifier = Modifier.weight(1f),
-                    colors = textFieldColors()
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
                 )
                 OutlinedTextField(
                     value = receipt.transactionTime,
                     onValueChange = { onReceiptChanged(receipt.copy(transactionTime = it)) },
                     label = { Text("Waktu") },
                     modifier = Modifier.weight(1f),
-                    colors = textFieldColors()
+                    colors = modernTextFieldColors(),
+                    shape = RoundedCornerShape(12.dp)
                 )
             }
 
@@ -447,20 +464,21 @@ private fun EditFieldsForm(
                 onValueChange = { onReceiptChanged(receipt.copy(notes = it)) },
                 label = { Text("Catatan Tambahan (Opsional)") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = modernTextFieldColors(),
+                shape = RoundedCornerShape(12.dp)
             )
         }
     }
 }
 
 @Composable
-private fun textFieldColors() = OutlinedTextFieldDefaults.colors(
+private fun modernTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedTextColor = TextPrimary,
     unfocusedTextColor = TextPrimary,
-    focusedBorderColor = AccentBlue,
-    unfocusedBorderColor = GlassBorder,
-    focusedLabelColor = AccentBlue,
+    focusedBorderColor = PrimaryOrange,
+    unfocusedBorderColor = BorderLight,
+    focusedLabelColor = PrimaryOrange,
     unfocusedLabelColor = TextSecondary,
-    focusedContainerColor = DarkPanel,
-    unfocusedContainerColor = DarkPanel
+    focusedContainerColor = LightSurface,
+    unfocusedContainerColor = LightSurface
 )

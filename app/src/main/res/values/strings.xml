@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Thermal Printer</string>
+    <string name="app_name">ARBCN</string>
     <string name="nav_home">Beranda</string>
+    <string name="nav_preview">Cetak</string>
     <string name="nav_history">Riwayat</string>
     <string name="nav_settings">Pengaturan</string>
-    <string name="nav_preview">Cetak Nota</string>
 </resources>

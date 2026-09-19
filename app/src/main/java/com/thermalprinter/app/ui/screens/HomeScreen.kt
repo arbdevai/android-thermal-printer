@@ -4,9 +4,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,6 +18,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -55,47 +59,74 @@ fun HomeScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(SolidBlack)
+            .background(LightBackground)
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Header
+        // Top App Bar / Brand Header
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = settings.storeName.ifBlank { "Thermal Printer" },
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = "Bukti Transaksi Bank & E-Wallet",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(PrimaryOrange, PrimaryOrangeDark)
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Receipt,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Column {
+                        Text(
+                            text = "ARBCN",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PrimaryOrange,
+                            letterSpacing = 0.5.sp
+                        )
+                        Text(
+                            text = "Thermal Printer Pro 2026",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = TextSecondary
+                        )
+                    }
                 }
 
-                // Bluetooth status badge
-                val (statusColor, statusText) = when (printerStatus) {
-                    is PrinterConnectionStatus.Connected -> SuccessGreen to "Terhubung"
-                    is PrinterConnectionStatus.Connecting -> WarningAmber to "Menghubungkan..."
-                    is PrinterConnectionStatus.Error -> ErrorRed to "Error"
-                    PrinterConnectionStatus.Disconnected -> TextMuted to "Offline"
+                // Bluetooth status pill badge
+                val (statusColor, statusBg, statusText) = when (printerStatus) {
+                    is PrinterConnectionStatus.Connected -> Triple(SuccessGreen, SuccessContainer, "Terhubung")
+                    is PrinterConnectionStatus.Connecting -> Triple(WarningAmber, WarningContainer, "Menghubungkan...")
+                    is PrinterConnectionStatus.Error -> Triple(ErrorRed, ErrorContainer, "Error")
+                    PrinterConnectionStatus.Disconnected -> Triple(TextSecondary, LightSurfaceSecondary, "Offline")
                 }
 
-                GlassCard(
+                Surface(
                     shape = RoundedCornerShape(20.dp),
-                    backgroundColor = DarkPanel,
+                    color = statusBg,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, statusColor.copy(alpha = 0.3f)),
+                    modifier = Modifier.clip(RoundedCornerShape(20.dp)),
                     onClick = onNavigateToSettings
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
@@ -106,65 +137,187 @@ fun HomeScreen(
                                 .background(statusColor)
                         )
                         Icon(
-                            imageVector = Icons.Default.Print,
+                            imageVector = Icons.Default.Bluetooth,
                             contentDescription = null,
                             tint = statusColor,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                         Text(
                             text = statusText,
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextPrimary
+                            fontWeight = FontWeight.SemiBold,
+                            color = statusColor
                         )
                     }
                 }
             }
         }
 
-        // Summary Card
+        // Hero Card 2026 (Orange Gradient with dynamic stats)
         item {
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundColor = DarkPanel
+            val totalTransactions = recentReceipts.size
+            val totalNominal = recentReceipts.sumOf { it.transferAmount }
+
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 8.dp,
+                        shape = RoundedCornerShape(24.dp),
+                        ambientColor = PrimaryOrange.copy(alpha = 0.2f),
+                        spotColor = PrimaryOrange.copy(alpha = 0.3f)
+                    ),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.Transparent
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
+                        .background(
+                            Brush.linearGradient(
+                                listOf(PrimaryOrange, PrimaryOrangeDark)
+                            )
+                        )
+                        .padding(20.dp)
                 ) {
-                    val totalTransactions = recentReceipts.size
-                    val totalNominal = recentReceipts.sumOf { it.transferAmount }
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = settings.storeName.ifBlank { "TOKO ANDA" },
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = if (settings.phone.isNotBlank()) "WA: ${settings.phone}" else "Siap Cetak Nota 58mm",
+                                    fontSize = 12.sp,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
 
-                    StatItem(
-                        label = "Total Transaksi",
-                        value = "$totalTransactions",
-                        icon = Icons.Default.ReceiptLong,
-                        accentColor = AccentBlue
-                    )
-                    Divider(
-                        modifier = Modifier
-                            .height(40.dp)
-                            .width(1.dp),
-                        color = GlassBorder
-                    )
-                    StatItem(
-                        label = "Total Terproses",
-                        value = ReceiptFormatter.formatRupiah(totalNominal),
-                        icon = Icons.Default.AccountBalanceWallet,
-                        accentColor = SuccessGreen
-                    )
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color.White.copy(alpha = 0.2f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FlashOn,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "Fast Mode",
+                                        color = Color.White,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+
+                        // Hero Metrics Row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White.copy(alpha = 0.15f))
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceAround,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Total Transaksi",
+                                    fontSize = 11.sp,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                                Text(
+                                    text = "$totalTransactions",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .width(1.dp)
+                                    .background(Color.White.copy(alpha = 0.3f))
+                            )
+
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "Total Terproses",
+                                    fontSize = 11.sp,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                                Text(
+                                    text = ReceiptFormatter.formatRupiah(totalNominal),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        // Quick Action Buttons Grid
+        // Promotional / Feature Banner Carousel (Modern 2026 UI Banner)
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                BannerCard(
+                    title = "Bagi Langsung dari Bank",
+                    subtitle = "Klik 'Bagikan' di BCA, DANA, BRImo langsung terisi otomatis.",
+                    tag = "Auto OCR",
+                    icon = Icons.Default.Share,
+                    bgColor = OrangeContainer,
+                    accentColor = PrimaryOrange
+                )
+                BannerCard(
+                    title = "Logo & Struk Kustom",
+                    subtitle = "Unggah logo toko & atur biaya admin per transaksi.",
+                    tag = "58mm Presisi",
+                    icon = Icons.Default.Image,
+                    bgColor = InfoContainer,
+                    accentColor = InfoBlue
+                )
+                BannerCard(
+                    title = "100% Offline & Aman",
+                    subtitle = "Tanpa server, riwayat tersimpan aman di HP Anda.",
+                    tag = "Privasi Terjaga",
+                    icon = Icons.Default.Shield,
+                    bgColor = SuccessContainer,
+                    accentColor = SuccessGreen
+                )
+            }
+        }
+
+        // Quick Action Buttons
         item {
             Text(
                 text = "Aksi Cepat",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
                 color = TextPrimary
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -172,19 +325,21 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ActionTile(
-                    title = "Scan / Galeri",
-                    subtitle = "Unggah Gambar Bukti",
-                    icon = Icons.Default.Image,
-                    iconTint = AccentCyan,
+                ActionPillCard(
+                    title = "Pindai Gambar",
+                    subtitle = "Screenshot Bukti",
+                    icon = Icons.Default.PhotoCamera,
+                    iconBg = OrangeContainer,
+                    iconColor = PrimaryOrange,
                     modifier = Modifier.weight(1f),
                     onClick = { imagePickerLauncher.launch("image/*") }
                 )
-                ActionTile(
+                ActionPillCard(
                     title = "Input Teks",
-                    subtitle = "Tempel / Tulis Manual",
+                    subtitle = "Tempel / Manual",
                     icon = Icons.Default.EditNote,
-                    iconTint = AccentBlue,
+                    iconBg = InfoContainer,
+                    iconColor = InfoBlue,
                     modifier = Modifier.weight(1f),
                     onClick = { showManualInputDialog = true }
                 )
@@ -197,74 +352,97 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ActionTile(
-                    title = "Uji Printer",
-                    subtitle = "Cetak Nota Tes 58mm",
+                ActionPillCard(
+                    title = "Uji Cetak",
+                    subtitle = "Tes Printer 58mm",
                     icon = Icons.Default.Print,
-                    iconTint = WarningAmber,
+                    iconBg = WarningContainer,
+                    iconColor = WarningAmber,
                     modifier = Modifier.weight(1f),
                     onClick = onQuickTestPrint
                 )
-                ActionTile(
+                ActionPillCard(
                     title = "Pengaturan",
-                    subtitle = "Toko, Admin & Printer",
+                    subtitle = "Logo, Toko & Admin",
                     icon = Icons.Default.Settings,
-                    iconTint = AccentPurple,
+                    iconBg = SuccessContainer,
+                    iconColor = SuccessGreen,
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToSettings
                 )
             }
         }
 
-        // Supported Bank/E-Wallet Horizontal Badges
+        // Supported Bank/E-Wallet Badges
         item {
-            Text(
-                text = "Mendukung 8 Bank & E-Wallet",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val supported = listOf(
-                    BankSource.BCA,
-                    BankSource.BRIMO,
-                    BankSource.LIVIN,
-                    BankSource.DANA,
-                    BankSource.GOPAY,
-                    BankSource.OVO,
-                    BankSource.SHOPEEPAY,
-                    BankSource.SEABANK
+                Text(
+                    text = "Mendukung 8 Bank & E-Wallet",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
-                supported.take(4).forEach { bank ->
-                    BankBadgeItem(bank = bank)
-                }
+                Text(
+                    text = "Auto-Detect",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = PrimaryOrange
+                )
             }
             Spacer(modifier = Modifier.height(8.dp))
+
+            val supported = listOf(
+                BankSource.BCA,
+                BankSource.BRIMO,
+                BankSource.LIVIN,
+                BankSource.DANA,
+                BankSource.GOPAY,
+                BankSource.OVO,
+                BankSource.SHOPEEPAY,
+                BankSource.SEABANK
+            )
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val supported = listOf(
-                    BankSource.BCA,
-                    BankSource.BRIMO,
-                    BankSource.LIVIN,
-                    BankSource.DANA,
-                    BankSource.GOPAY,
-                    BankSource.OVO,
-                    BankSource.SHOPEEPAY,
-                    BankSource.SEABANK
-                )
-                supported.drop(4).forEach { bank ->
-                    BankBadgeItem(bank = bank)
+                supported.forEach { bank ->
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = LightSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, BorderLight),
+                        modifier = Modifier.shadow(1.dp, RoundedCornerShape(12.dp))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(bank.brandColorHex))
+                            )
+                            Text(
+                                text = bank.name,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                        }
+                    }
                 }
             }
         }
 
-        // Recent Transactions Section Header
+        // Recent Transactions Section
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -273,48 +451,51 @@ fun HomeScreen(
             ) {
                 Text(
                     text = "Transaksi Terbaru",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
                 if (recentReceipts.isNotEmpty()) {
                     TextButton(onClick = onNavigateToHistory) {
-                        Text(text = "Lihat Semua", color = AccentBlue, fontSize = 13.sp)
+                        Text(text = "Lihat Semua", color = PrimaryOrange, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }
         }
 
-        // Recent Transactions List
         if (recentReceipts.isEmpty()) {
             item {
-                GlassCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                ) {
+                GlassCard(modifier = Modifier.fillMaxWidth()) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
+                            .padding(28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ReceiptLong,
-                            contentDescription = null,
-                            tint = TextMuted,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ReceiptLong,
+                                contentDescription = null,
+                                tint = PrimaryOrange,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Belum Ada Riwayat Transaksi",
-                            color = TextSecondary,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
                         )
                         Text(
-                            text = "Gunakan tombol Bagikan dari BCA, DANA, dll. atau pilih menu di atas.",
-                            color = TextMuted,
+                            text = "Bagikan bukti dari BCA, DANA, dll. atau gunakan tombol di atas.",
+                            color = TextSecondary,
                             fontSize = 12.sp,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -323,7 +504,7 @@ fun HomeScreen(
             }
         } else {
             items(recentReceipts.take(5)) { receipt ->
-                RecentReceiptCard(
+                ModernReceiptItem(
                     receipt = receipt,
                     onClick = { onSelectReceipt(receipt) }
                 )
@@ -335,9 +516,9 @@ fun HomeScreen(
     if (showManualInputDialog) {
         AlertDialog(
             onDismissRequest = { showManualInputDialog = false },
-            containerColor = DarkSurface,
+            containerColor = LightSurface,
             title = {
-                Text(text = "Input / Tempel Teks Transaksi", color = TextPrimary)
+                Text(text = "Input / Tempel Teks Transaksi", color = TextPrimary, fontWeight = FontWeight.Bold)
             },
             text = {
                 OutlinedTextField(
@@ -345,7 +526,7 @@ fun HomeScreen(
                     onValueChange = { manualText = it },
                     placeholder = {
                         Text(
-                            text = "Contoh: Transfer Berhasil\nNominal: Rp 50.000\nKe: Budi Santoso\nRef: 20240919123456",
+                            text = "Contoh: Transfer Berhasil\nNominal: Rp 50.000\nKe: Budi Santoso\nRef: 20260919123456",
                             color = TextMuted,
                             fontSize = 12.sp
                         )
@@ -356,11 +537,12 @@ fun HomeScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = AccentBlue,
-                        unfocusedBorderColor = GlassBorder,
-                        focusedContainerColor = DarkPanel,
-                        unfocusedContainerColor = DarkPanel
-                    )
+                        focusedBorderColor = PrimaryOrange,
+                        unfocusedBorderColor = BorderLight,
+                        focusedContainerColor = LightSurface,
+                        unfocusedContainerColor = LightSurface
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 )
             },
             confirmButton = {
@@ -372,9 +554,10 @@ fun HomeScreen(
                             manualText = ""
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    Text("Proses Nota", color = TextPrimary)
+                    Text("Proses Nota", color = TextOnOrange, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -387,106 +570,126 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatItem(label: String, value: String, icon: ImageVector, accentColor: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = accentColor,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(text = label, color = TextSecondary, fontSize = 11.sp)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = value,
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
-    }
-}
-
-@Composable
-private fun ActionTile(
+private fun BannerCard(
     title: String,
     subtitle: String,
+    tag: String,
     icon: ImageVector,
-    iconTint: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
+    bgColor: Color,
+    accentColor: Color
 ) {
-    GlassCard(
-        modifier = modifier,
-        onClick = onClick
+    Surface(
+        modifier = Modifier
+            .width(260.dp)
+            .shadow(2.dp, RoundedCornerShape(18.dp)),
+        shape = RoundedCornerShape(18.dp),
+        color = bgColor,
+        border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.2f))
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(iconTint.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = accentColor.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = tag,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(20.dp)
+                    tint = accentColor,
+                    modifier = Modifier.size(18.dp)
                 )
             }
-            Column {
-                Text(
-                    text = title,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = subtitle,
-                    color = TextMuted,
-                    fontSize = 11.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun BankBadgeItem(bank: BankSource) {
-    GlassCard(
-        shape = RoundedCornerShape(8.dp),
-        backgroundColor = DarkPanel
-    ) {
-        Box(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
-        ) {
             Text(
-                text = bank.name,
-                color = Color(bank.brandColorHex),
+                text = title,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
-                fontSize = 11.sp
+                color = TextPrimary
+            )
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = TextSecondary,
+                lineHeight = 15.sp
             )
         }
     }
 }
 
 @Composable
-private fun RecentReceiptCard(
+private fun ActionPillCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    iconBg: Color,
+    iconColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    GlassCard(
+        modifier = modifier,
+        onClick = onClick,
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(iconBg),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernReceiptItem(
     receipt: TransactionReceipt,
     onClick: () -> Unit
 ) {
     GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onClick
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -503,13 +706,13 @@ private fun RecentReceiptCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color(receipt.source.brandColorHex).copy(alpha = 0.2f)),
+                        .background(Color(receipt.source.brandColorHex).copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = receipt.source.name.take(3),
                         color = Color(receipt.source.brandColorHex),
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         fontSize = 11.sp
                     )
                 }
@@ -518,12 +721,12 @@ private fun RecentReceiptCard(
                     Text(
                         text = receipt.receiverName.ifBlank { receipt.transactionType },
                         color = TextPrimary,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
                     Text(
-                        text = "${receipt.transactionDate} ${receipt.transactionTime}".trim(),
-                        color = TextMuted,
+                        text = "${receipt.source.displayName} • ${receipt.transactionDate} ${receipt.transactionTime}".trim(),
+                        color = TextSecondary,
                         fontSize = 11.sp
                     )
                 }
@@ -532,14 +735,14 @@ private fun RecentReceiptCard(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = ReceiptFormatter.formatRupiah(receipt.calculateTotal()),
-                    color = AccentBlue,
-                    fontWeight = FontWeight.Bold,
+                    color = PrimaryOrange,
+                    fontWeight = FontWeight.ExtraBold,
                     fontSize = 14.sp
                 )
                 if (receipt.storeAdminFee > 0) {
                     Text(
                         text = "+Adm ${ReceiptFormatter.formatRupiah(receipt.storeAdminFee)}",
-                        color = TextMuted,
+                        color = TextSecondary,
                         fontSize = 10.sp
                     )
                 }

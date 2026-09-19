@@ -11,11 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.thermalprinter.app.domain.model.ReceiptTemplate
 import com.thermalprinter.app.domain.model.StoreSettings
 import com.thermalprinter.app.domain.model.TransactionReceipt
@@ -44,6 +46,18 @@ fun ReceiptPaperPreview(
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Store Logo if enabled
+            if (settings.showLogo && settings.logoPath.isNotBlank()) {
+                AsyncImage(
+                    model = settings.logoPath,
+                    contentDescription = "Logo Toko",
+                    modifier = Modifier
+                        .size(64.dp)
+                        .padding(bottom = 6.dp),
+                    contentScale = ContentScale.Fit
+                )
+            }
+
             // Header
             Text(
                 text = settings.storeName.ifBlank { "BUKTI TRANSAKSI" },
