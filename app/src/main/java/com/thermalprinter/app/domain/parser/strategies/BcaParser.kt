@@ -8,11 +8,15 @@ class BcaParser : BankParserStrategy {
 
     override fun canHandle(text: String): Boolean {
         val lower = text.lowercase()
-        return lower.contains("bca") ||
-                lower.contains("m-transfer") ||
+        // Match source-app markers only. A plain "BCA" may be the recipient bank
+        // on another app's receipt (for example Livin -> BCA).
+        return lower.contains("m-transfer") ||
+                lower.contains("m-bca") ||
+                lower.contains("bca mobile") ||
                 lower.contains("mybca") ||
                 lower.contains("klikbca") ||
                 lower.contains("bank central asia")
+                || lower.lines().take(3).any { it.trim().equals("bca", ignoreCase = true) }
     }
 
     override fun parse(text: String, defaultStoreFee: Long, splitAdminFee: Boolean): TransactionReceipt {

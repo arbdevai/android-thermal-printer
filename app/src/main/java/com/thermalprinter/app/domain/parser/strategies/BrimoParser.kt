@@ -10,8 +10,8 @@ class BrimoParser : BankParserStrategy {
         val lower = text.lowercase()
         return lower.contains("brimo") ||
                 lower.contains("bank rakyat indonesia") ||
-                lower.contains("bri") ||
-                lower.contains("m-bri")
+                lower.contains("m-bri") ||
+                lower.lines().take(3).any { it.trim().equals("bri", ignoreCase = true) }
     }
 
     override fun parse(text: String, defaultStoreFee: Long, splitAdminFee: Boolean): TransactionReceipt {
