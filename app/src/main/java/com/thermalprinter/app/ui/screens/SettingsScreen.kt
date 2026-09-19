@@ -622,6 +622,82 @@ fun SettingsScreen(
                 }
             }
 
+            // Section 6: Info Aplikasi & Changelog
+            var showChangelogDialog by remember { mutableStateOf(false) }
+
+            GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(OrangeContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Info, contentDescription = null, tint = PrimaryOrange, modifier = Modifier.size(18.dp))
+                        }
+                        Column {
+                            Text(
+                                text = "Tentang ARBCN",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "Versi 1.1.0 (Build 2) • Signature v1+v2+v3",
+                                fontSize = 11.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = LightSurfaceSecondary,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = SuccessGreen, modifier = Modifier.size(16.dp))
+                            Text(
+                                text = "APK Ditandatangani Konsisten (v1 + v2 + v3)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TextPrimary
+                            )
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = { showChangelogDialog = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryOrange)
+                    ) {
+                        Icon(Icons.Default.NewReleases, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Lihat Catatan Rilis / Changelog", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+            }
+
+            if (showChangelogDialog) {
+                com.thermalprinter.app.ui.components.ChangelogDialog(
+                    onDismiss = { showChangelogDialog = false }
+                )
+            }
+
             Spacer(modifier = Modifier.height(100.dp))
         }
     }
