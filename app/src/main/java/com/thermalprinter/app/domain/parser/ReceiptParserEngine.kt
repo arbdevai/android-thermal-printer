@@ -37,12 +37,12 @@ object ReceiptParserEngine {
 
         val receiver = findValueAfterLabels(
             lines,
-            listOf("nama penerima", "nama tujuan", "nama:", "penerima", "kepada", "tujuan", "ke rekening", "ke")
+            listOf("nama penerima", "nama tujuan", "nama:", "penerima", "kepada", "tujuan")
         )
 
         val sender = findValueAfterLabels(
             lines,
-            listOf("nama pengirim", "pengirim", "dari rekening", "sumber dana", "dari", "sumber")
+            listOf("nama pengirim", "pengirim", "sumber dana", "dari")
         )
 
         val bank = findValueAfterLabels(
@@ -64,10 +64,15 @@ object ReceiptParserEngine {
             else -> "BERHASIL"
         }
 
-        // Find potential account numbers
-        val numbers = accountNumberPattern.findAll(normalized).map { it.value }.toList()
-        val receiverAccount = numbers.lastOrNull().orEmpty()
-        val senderAccount = if (numbers.size > 1) numbers.first() else ""
+        val receiverAccount = findValueAfterLabels(
+            lines,
+            listOf("ke rekening", "rekening tujuan", "no. tujuan", "no tujuan", "tujuan transfer")
+        )?.filter { it.isDigit() } ?: accountNumberPattern.findAll(normalized).map { it.value }.lastOrNull().orEmpty()
+
+        val senderAccount = findValueAfterLabels(
+            lines,
+            listOf("dari rekening", "rekening sumber", "rekening asal")
+        )?.filter { it.isDigit() } ?: ""
 
         return TransactionReceipt(
             source = source,
@@ -101,7 +106,6 @@ object ReceiptParserEngine {
             val line = lines[index]
             for (label in labels) {
                 if (line.contains(label, ignoreCase = true)) {
-                    // Try to find explicit or standard amount in current line
                     val sameLine = explicitAmountPattern.find(line)?.groupValues?.getOrNull(1)
                         ?: standardAmountPattern.find(line)?.groupValues?.getOrNull(1)
 
@@ -109,10 +113,8 @@ object ReceiptParserEngine {
                         parseAmount(sameLine)?.let { if (it >= 100) return it }
                     }
 
-                    // Try next line if same line has no amount
                     if (index + 1 < lines.size) {
                         val nextLine = lines[index + 1]
-                        // Ignore date lines as amounts
                         if (!datePattern.containsMatchIn(nextLine)) {
                             val nextAmount = explicitAmountPattern.find(nextLine)?.groupValues?.getOrNull(1)
                                 ?: standardAmountPattern.find(nextLine)?.groupValues?.getOrNull(1)
@@ -155,7 +157,7 @@ object ReceiptParserEngine {
     }
 
     private fun cleanValue(value: String): String {
-        return value.replace(Regex("(?i)^(rp|idr)\\s*"), "")
+        return value.replace(Regex("(?i)^(rp|idr|nama|name)[:\\s-]*"), "")
             .trim()
             .take(30)
     }
