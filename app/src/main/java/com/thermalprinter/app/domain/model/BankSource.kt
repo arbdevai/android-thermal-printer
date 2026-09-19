@@ -8,7 +8,7 @@ enum class BankSource(
     BCA(
         displayName = "Bank Central Asia (BCA)",
         brandColorHex = 0xFF0060AF,
-        detectionKeywords = listOf("bca", "bank central asia", "m-bca", "mybca", "klikbca")
+        detectionKeywords = listOf("bca", "m-transfer", "bank central asia", "m-bca", "mybca", "klikbca")
     ),
     BRIMO(
         displayName = "BRI (BRImo)",
