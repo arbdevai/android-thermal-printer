@@ -203,21 +203,44 @@ class MainActivity : ComponentActivity() {
                             }
 
                             composable(NavRoute.CustomInvoice.route) {
+                                val invoiceDraftViewModel: com.thermalprinter.app.ui.screens.InvoiceDraftViewModel =
+                                    androidx.lifecycle.viewmodel.compose.viewModel()
+                                var isInvoiceBusy by remember { mutableStateOf(false) }
+
                                 com.thermalprinter.app.ui.screens.CustomInvoiceScreen(
                                     settings = settings,
                                     subscriptionState = subscriptionState,
+                                    draftViewModel = invoiceDraftViewModel,
+                                    isBusy = isInvoiceBusy,
                                     onPrintInvoice = { invoice ->
                                         scope.launch {
-                                            val logoBitmap = if (settings.showLogo && settings.logoPath.isNotBlank()) {
-                                                appData.loadLogoBitmap(settings.logoPath)
-                                            } else null
+                                            isInvoiceBusy = true
+                                            try {
+                                                val logoBitmap = if (settings.showLogo && settings.logoPath.isNotBlank()) {
+                                                    appData.loadLogoBitmap(settings.logoPath)
+                                                } else null
 
-                                            val bytes = com.thermalprinter.app.printer.InvoiceFormatter.buildEscPos(invoice, settings, logoBitmap)
-                                            val printResult = printerManager.printBytes(bytes)
-                                            if (printResult.isSuccess) {
-                                                snackbarHostState.showSnackbar("Nota Invoice berhasil dicetak!")
-                                            } else {
-                                                snackbarHostState.showSnackbar("Gagal mencetak: ${printResult.exceptionOrNull()?.message}")
+                                                val bytes = com.thermalprinter.app.printer.InvoiceFormatter.buildEscPos(invoice, settings, logoBitmap)
+                                                val printResult = printerManager.printBytes(bytes)
+                                                if (printResult.isSuccess) {
+                                                    snackbarHostState.showSnackbar("Nota Invoice berhasil dicetak!")
+                                                } else {
+                                                    snackbarHostState.showSnackbar("Gagal mencetak: ${printResult.exceptionOrNull()?.message}")
+                                                }
+                                            } finally {
+                                                isInvoiceBusy = false
+                                            }
+                                        }
+                                    },
+                                    onShareInvoice = { invoice, asImage ->
+                                        scope.launch {
+                                            isInvoiceBusy = true
+                                            try {
+                                                shareInvoiceWhatsApp(invoice, settings, asImage)
+                                            } catch (e: Exception) {
+                                                snackbarHostState.showSnackbar("Gagal membagikan invoice: ${e.message}")
+                                            } finally {
+                                                isInvoiceBusy = false
                                             }
                                         }
                                     },
@@ -468,6 +491,75 @@ class MainActivity : ComponentActivity() {
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(shareIntent, "Bagikan Bukti Transaksi"))
+    }
+
+    private suspend fun shareInvoiceWhatsApp(
+        invoice: CustomInvoice,
+        settings: StoreSettings,
+        asImage: Boolean
+    ) {
+        val normalizedPhone = com.thermalprinter.app.domain.model.WhatsAppPhone.normalize(invoice.customerPhone)
+        val textBody = com.thermalprinter.app.printer.InvoiceDocument.text(invoice, settings)
+
+        if (asImage) {
+            val imageFile = com.thermalprinter.app.printer.InvoiceImageRenderer.writePng(this, invoice, settings)
+            val uri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", imageFile)
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "image/png"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_TEXT, "Nota Invoice ${invoice.invoiceNumber.ifBlank { "Toko" }}")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                setPackage("com.whatsapp")
+            }
+            try {
+                startActivity(intent)
+            } catch (_: Exception) {
+                // WhatsApp not installed or package dispatch failed: fallback to general chooser
+                val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    putExtra(Intent.EXTRA_TEXT, "Nota Invoice ${invoice.invoiceNumber.ifBlank { "Toko" }}")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                startActivity(Intent.createChooser(fallbackIntent, "Bagikan Gambar Nota"))
+            }
+        } else {
+            // Text sharing
+            if (normalizedPhone != null) {
+                // Direct phone chat intent via wa.me URI
+                val encodedText = Uri.encode(textBody)
+                val directUri = Uri.parse("https://wa.me/$normalizedPhone?text=$encodedText")
+                val directIntent = Intent(Intent.ACTION_VIEW, directUri).apply {
+                    setPackage("com.whatsapp")
+                }
+                try {
+                    startActivity(directIntent)
+                    return
+                } catch (_: Exception) {
+                    // Try generic ACTION_VIEW for browsers or WhatsApp Business
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, directUri))
+                        return
+                    } catch (_: Exception) {}
+                }
+            }
+
+            // Fallback plain text share
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, textBody)
+                setPackage("com.whatsapp")
+            }
+            try {
+                startActivity(sendIntent)
+            } catch (_: Exception) {
+                val chooserIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, textBody)
+                }
+                startActivity(Intent.createChooser(chooserIntent, "Bagikan Teks Nota"))
+            }
+        }
     }
 
     private fun exportHistoryToCsv(receipts: List<TransactionReceipt>) {

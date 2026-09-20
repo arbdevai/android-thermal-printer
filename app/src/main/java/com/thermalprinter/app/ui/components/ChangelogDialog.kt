@@ -29,9 +29,22 @@ data class ReleaseLog(
 
 val APP_CHANGELOG = listOf(
     ReleaseLog(
-        version = "v1.4.0",
+        version = "v1.5.0",
         date = "September 2026",
         isLatest = true,
+        changes = listOf(
+            "Live Preview Kertas Struk 58mm Real-Time di Pembuat Nota Toko & Bengkel (Tab Form Input vs Pratinjau Struk)",
+            "Fitur Bagikan ke WhatsApp: Pilihan kirim Teks Rapi Terformat atau Gambar Struk Nota 58mm (PNG HD)",
+            "Input Nomor WhatsApp Pelanggan & Pemilih Kontak HP (ACTION_PICK) tanpa perlu izin kontak massal",
+            "Sinkronisasi Data Asynchronous: Perhitungan subtotal, render preview, dan bitmap berjalan di thread background tanpa lag",
+            "Arsitektur Dokumen Kanonikal Tunggal: Tampilan preview, hasil cetak ESC/POS, dan gambar share 100% konsisten",
+            "Pembaruan APK Admin Generator v1.2.0 dengan penandatanganan konsisten v1+v2+v3"
+        )
+    ),
+    ReleaseLog(
+        version = "v1.4.0",
+        date = "September 2026",
+        isLatest = false,
         changes = listOf(
             "Fitur Baru: Pembuat Nota Invoice Toko, Bengkel, dan Jasa Servis 58mm (Daftar item dinamis, kalkulasi diskon & kembalian)",
             "Paket PLUS 3 Bulan (Rp 25.000): Akses penuh cetak struk transfer bank + pembuat nota invoice toko & bengkel",
