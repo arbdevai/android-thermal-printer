@@ -23,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.thermalprinter.app.domain.model.CustomInvoice
 import com.thermalprinter.app.domain.model.StoreSettings
 import com.thermalprinter.app.domain.model.TransactionReceipt
 import com.thermalprinter.app.domain.parser.ReceiptParserEngine
